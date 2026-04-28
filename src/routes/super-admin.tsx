@@ -753,3 +753,139 @@ function MenusTab() {
     </Card>
   );
 }
+
+/* ---------------- HELPERS ---------------- */
+
+function toLocalInput(iso: string): string {
+  const d = new Date(iso);
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+
+/* ---------------- AUDIT TAB ---------------- */
+
+interface ActivityLog {
+  id: string;
+  actor_id: string | null;
+  actor_name: string | null;
+  action: string;
+  entity_type: string;
+  entity_id: string | null;
+  entity_label: string | null;
+  details: any;
+  created_at: string;
+}
+
+const ACTION_LABEL: Record<string, string> = {
+  role_changed: "Mengubah role",
+  menu_created: "Menambah menu",
+  menu_updated: "Memperbarui menu",
+  menu_deleted: "Menghapus menu",
+  menu_availability_toggled: "Mengubah ketersediaan menu",
+};
+
+function AuditTab() {
+  const [logs, setLogs] = useState<ActivityLog[]>([]);
+  const [busy, setBusy] = useState(true);
+  const [filter, setFilter] = useState<string>("all");
+
+  async function load() {
+    setBusy(true);
+    const { data, error } = await (supabase.from("activity_logs") as any)
+      .select("*")
+      .order("created_at", { ascending: false })
+      .limit(200);
+    if (error) toast.error(error.message);
+    setLogs((data ?? []) as ActivityLog[]);
+    setBusy(false);
+  }
+
+  useEffect(() => {
+    load();
+  }, []);
+
+  const filtered = logs.filter((l) => {
+    if (filter === "all") return true;
+    if (filter === "user") return l.entity_type === "user";
+    if (filter === "menu") return l.entity_type === "menu";
+    return true;
+  });
+
+  return (
+    <Card className="p-5 shadow-soft">
+      <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <h2 className="font-display text-xl font-bold">Riwayat Aktivitas</h2>
+          <p className="text-sm text-muted-foreground">
+            {logs.length} catatan terakhir (maks. 200). Audit trail siapa mengubah apa & kapan.
+          </p>
+        </div>
+        <Select value={filter} onValueChange={setFilter}>
+          <SelectTrigger className="w-[180px]">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Semua aktivitas</SelectItem>
+            <SelectItem value="user">Perubahan Role</SelectItem>
+            <SelectItem value="menu">Aktivitas Menu</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+
+      {busy ? (
+        <p className="py-10 text-center text-muted-foreground">Memuat...</p>
+      ) : filtered.length === 0 ? (
+        <p className="py-10 text-center text-muted-foreground">Belum ada aktivitas tercatat.</p>
+      ) : (
+        <div className="space-y-2">
+          {filtered.map((l) => (
+            <div
+              key={l.id}
+              className="flex flex-wrap items-start justify-between gap-3 rounded-lg border border-border/60 bg-secondary/30 p-3 text-sm"
+            >
+              <div className="flex items-start gap-3 min-w-0 flex-1">
+                <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
+                  {l.entity_type === "user" ? <UserIcon className="h-4 w-4" /> : <UtensilsCrossed className="h-4 w-4" />}
+                </div>
+                <div className="min-w-0">
+                  <div>
+                    <span className="font-semibold">{l.actor_name || "Sistem"}</span>{" "}
+                    <span className="text-muted-foreground">
+                      {ACTION_LABEL[l.action] || l.action}
+                    </span>{" "}
+                    {l.entity_label && (
+                      <span className="font-medium">"{l.entity_label}"</span>
+                    )}
+                  </div>
+                  {l.details && (
+                    <div className="mt-0.5 text-xs text-muted-foreground">
+                      {formatDetails(l.action, l.details)}
+                    </div>
+                  )}
+                </div>
+              </div>
+              <div className="text-xs text-muted-foreground whitespace-nowrap">
+                {new Date(l.created_at).toLocaleString("id-ID", { dateStyle: "medium", timeStyle: "short" })}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </Card>
+  );
+}
+
+function formatDetails(action: string, details: any): string {
+  if (!details) return "";
+  if (action === "role_changed") return `Dari "${details.from}" → "${details.to}"`;
+  if (action === "menu_availability_toggled")
+    return details.is_available ? "Diaktifkan kembali" : "Ditandai habis";
+  if (action === "menu_created" || action === "menu_updated") {
+    const parts: string[] = [];
+    if (details.price) parts.push(`harga Rp ${Number(details.price).toLocaleString("id-ID")}`);
+    if (details.promo_price) parts.push(`promo Rp ${Number(details.promo_price).toLocaleString("id-ID")}`);
+    if (details.category) parts.push(details.category);
+    return parts.join(" · ");
+  }
+  return "";
+}
