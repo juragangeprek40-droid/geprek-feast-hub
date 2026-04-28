@@ -53,7 +53,15 @@ import {
   User as UserIcon,
   History,
   Tag,
+  Settings as SettingsIcon,
+  Save,
 } from "lucide-react";
+import {
+  fetchSiteSettings,
+  upsertSettingSection,
+  DEFAULT_SETTINGS,
+  type SiteSettings,
+} from "@/lib/site-settings";
 
 export const Route = createFileRoute("/super-admin")({
   head: () => ({ meta: [{ title: "Super Admin — Juragan Geprek" }] }),
@@ -135,6 +143,9 @@ function SuperAdminPage() {
           <TabsTrigger value="audit" className="gap-2">
             <History className="h-4 w-4" /> Audit Log
           </TabsTrigger>
+          <TabsTrigger value="settings" className="gap-2">
+            <SettingsIcon className="h-4 w-4" /> Pengaturan Website
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="users" className="mt-6">
@@ -145,6 +156,9 @@ function SuperAdminPage() {
         </TabsContent>
         <TabsContent value="audit" className="mt-6">
           <AuditTab />
+        </TabsContent>
+        <TabsContent value="settings" className="mt-6">
+          <SettingsTab userId={user.id} />
         </TabsContent>
       </Tabs>
     </div>
@@ -782,6 +796,7 @@ const ACTION_LABEL: Record<string, string> = {
   menu_updated: "Memperbarui menu",
   menu_deleted: "Menghapus menu",
   menu_availability_toggled: "Mengubah ketersediaan menu",
+  settings_updated: "Memperbarui pengaturan",
 };
 
 function AuditTab() {
@@ -888,4 +903,167 @@ function formatDetails(action: string, details: any): string {
     return parts.join(" · ");
   }
   return "";
+}
+
+/* ---------------- SETTINGS TAB ---------------- */
+
+function SettingsTab({ userId }: { userId: string }) {
+  const [settings, setSettings] = useState<SiteSettings>(DEFAULT_SETTINGS);
+  const [busy, setBusy] = useState(true);
+  const [savingKey, setSavingKey] = useState<string | null>(null);
+
+  useEffect(() => {
+    fetchSiteSettings()
+      .then(setSettings)
+      .finally(() => setBusy(false));
+  }, []);
+
+  async function saveSection<K extends keyof SiteSettings>(key: K) {
+    setSavingKey(key);
+    try {
+      await upsertSettingSection(key, settings[key], userId);
+      await logActivity({
+        action: "settings_updated",
+        entity_type: "site_settings",
+        entity_id: key,
+        entity_label: key,
+        details: settings[key] as any,
+      });
+      toast.success(`Pengaturan "${key}" disimpan`);
+    } catch (e: any) {
+      toast.error(e.message ?? "Gagal menyimpan");
+    } finally {
+      setSavingKey(null);
+    }
+  }
+
+  function update<K extends keyof SiteSettings>(key: K, patch: Partial<SiteSettings[K]>) {
+    setSettings((s) => ({ ...s, [key]: { ...s[key], ...patch } }));
+  }
+
+  if (busy) return <p className="py-10 text-center text-muted-foreground">Memuat...</p>;
+
+  return (
+    <div className="space-y-5">
+      {/* GENERAL */}
+      <Card className="p-5 shadow-soft">
+        <div className="mb-4 flex items-center justify-between">
+          <div>
+            <h3 className="font-display text-lg font-bold">Informasi Umum</h3>
+            <p className="text-xs text-muted-foreground">Nama, tagline, dan deskripsi situs.</p>
+          </div>
+          <Button onClick={() => saveSection("general")} disabled={savingKey === "general"} className="bg-gradient-warm text-primary-foreground shadow-warm">
+            <Save className="mr-1 h-4 w-4" /> Simpan
+          </Button>
+        </div>
+        <div className="grid gap-3 md:grid-cols-2">
+          <div>
+            <Label>Nama Website</Label>
+            <Input value={settings.general.site_name} onChange={(e) => update("general", { site_name: e.target.value })} />
+          </div>
+          <div>
+            <Label>Tagline</Label>
+            <Input value={settings.general.tagline} onChange={(e) => update("general", { tagline: e.target.value })} />
+          </div>
+          <div className="md:col-span-2">
+            <Label>Deskripsi (SEO)</Label>
+            <Textarea rows={2} value={settings.general.description} onChange={(e) => update("general", { description: e.target.value })} />
+          </div>
+        </div>
+      </Card>
+
+      {/* HERO */}
+      <Card className="p-5 shadow-soft">
+        <div className="mb-4 flex items-center justify-between">
+          <div>
+            <h3 className="font-display text-lg font-bold">Hero Beranda</h3>
+            <p className="text-xs text-muted-foreground">Judul utama yang tampil di halaman depan.</p>
+          </div>
+          <Button onClick={() => saveSection("hero")} disabled={savingKey === "hero"} className="bg-gradient-warm text-primary-foreground shadow-warm">
+            <Save className="mr-1 h-4 w-4" /> Simpan
+          </Button>
+        </div>
+        <div className="grid gap-3">
+          <div>
+            <Label>Headline</Label>
+            <Input value={settings.hero.headline} onChange={(e) => update("hero", { headline: e.target.value })} />
+          </div>
+          <div>
+            <Label>Subheadline</Label>
+            <Textarea rows={2} value={settings.hero.subheadline} onChange={(e) => update("hero", { subheadline: e.target.value })} />
+          </div>
+          <div>
+            <Label>Teks Tombol CTA</Label>
+            <Input value={settings.hero.cta_text} onChange={(e) => update("hero", { cta_text: e.target.value })} />
+          </div>
+        </div>
+      </Card>
+
+      {/* CONTACT */}
+      <Card className="p-5 shadow-soft">
+        <div className="mb-4 flex items-center justify-between">
+          <div>
+            <h3 className="font-display text-lg font-bold">Kontak</h3>
+            <p className="text-xs text-muted-foreground">Informasi kontak yang tampil di footer.</p>
+          </div>
+          <Button onClick={() => saveSection("contact")} disabled={savingKey === "contact"} className="bg-gradient-warm text-primary-foreground shadow-warm">
+            <Save className="mr-1 h-4 w-4" /> Simpan
+          </Button>
+        </div>
+        <div className="grid gap-3 md:grid-cols-2">
+          <div>
+            <Label>Nomor Telepon</Label>
+            <Input value={settings.contact.phone} onChange={(e) => update("contact", { phone: e.target.value })} />
+          </div>
+          <div>
+            <Label>WhatsApp (62...)</Label>
+            <Input value={settings.contact.whatsapp} onChange={(e) => update("contact", { whatsapp: e.target.value })} placeholder="6281234567890" />
+          </div>
+          <div>
+            <Label>Email</Label>
+            <Input type="email" value={settings.contact.email} onChange={(e) => update("contact", { email: e.target.value })} />
+          </div>
+          <div>
+            <Label>Instagram</Label>
+            <Input value={settings.contact.instagram} onChange={(e) => update("contact", { instagram: e.target.value })} placeholder="@username" />
+          </div>
+          <div className="md:col-span-2">
+            <Label>Alamat</Label>
+            <Textarea rows={2} value={settings.contact.address} onChange={(e) => update("contact", { address: e.target.value })} />
+          </div>
+        </div>
+      </Card>
+
+      {/* PAYMENT */}
+      <Card className="p-5 shadow-soft">
+        <div className="mb-4 flex items-center justify-between">
+          <div>
+            <h3 className="font-display text-lg font-bold">Pembayaran (Transfer Bank)</h3>
+            <p className="text-xs text-muted-foreground">Rekening tujuan transfer untuk checkout.</p>
+          </div>
+          <Button onClick={() => saveSection("payment")} disabled={savingKey === "payment"} className="bg-gradient-warm text-primary-foreground shadow-warm">
+            <Save className="mr-1 h-4 w-4" /> Simpan
+          </Button>
+        </div>
+        <div className="grid gap-3 md:grid-cols-2">
+          <div>
+            <Label>Nama Bank</Label>
+            <Input value={settings.payment.bank_name} onChange={(e) => update("payment", { bank_name: e.target.value })} />
+          </div>
+          <div>
+            <Label>Nomor Rekening</Label>
+            <Input value={settings.payment.account_number} onChange={(e) => update("payment", { account_number: e.target.value })} />
+          </div>
+          <div className="md:col-span-2">
+            <Label>Atas Nama</Label>
+            <Input value={settings.payment.account_holder} onChange={(e) => update("payment", { account_holder: e.target.value })} />
+          </div>
+          <div className="md:col-span-2">
+            <Label>Instruksi Pembayaran</Label>
+            <Textarea rows={3} value={settings.payment.instructions} onChange={(e) => update("payment", { instructions: e.target.value })} />
+          </div>
+        </div>
+      </Card>
+    </div>
+  );
 }
