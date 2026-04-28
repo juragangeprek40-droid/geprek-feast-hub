@@ -396,28 +396,20 @@ function MenusTab() {
     toast.success("Gambar diunggah");
   }
 
-  async function handleUpload(file: File) {
-    setUploading(true);
-    const ext = file.name.split(".").pop();
-    const path = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
-    const { error } = await supabase.storage
-      .from("menu-images")
-      .upload(path, file, { upsert: false });
-    if (error) {
-      setUploading(false);
-      return toast.error(error.message);
-    }
-    const { data } = supabase.storage.from("menu-images").getPublicUrl(path);
-    setForm((f) => ({ ...f, image_url: data.publicUrl }));
-    setUploading(false);
-    toast.success("Gambar diunggah");
-  }
 
   async function save() {
     if (!form.name.trim()) return toast.error("Nama menu wajib diisi");
     if (form.price <= 0) return toast.error("Harga harus lebih dari 0");
+    if (form.promo_price != null && form.promo_price > 0) {
+      if (form.promo_price >= form.price) {
+        return toast.error("Harga promo harus lebih kecil dari harga normal");
+      }
+      if (form.promo_start_at && form.promo_end_at && new Date(form.promo_start_at) >= new Date(form.promo_end_at)) {
+        return toast.error("Tanggal akhir promo harus setelah tanggal mulai");
+      }
+    }
 
-    const payload = {
+    const payload: any = {
       name: form.name.trim(),
       description: form.description?.trim() || null,
       price: form.price,
@@ -425,6 +417,9 @@ function MenusTab() {
       image_url: form.image_url?.trim() || null,
       is_available: form.is_available,
       min_portion: form.min_portion,
+      promo_price: form.promo_price && form.promo_price > 0 ? form.promo_price : null,
+      promo_start_at: form.promo_start_at || null,
+      promo_end_at: form.promo_end_at || null,
     };
 
     if (editing) {
@@ -433,29 +428,57 @@ function MenusTab() {
         .update(payload)
         .eq("id", editing.id);
       if (error) return toast.error(error.message);
+      await logActivity({
+        action: "menu_updated",
+        entity_type: "menu",
+        entity_id: editing.id,
+        entity_label: payload.name,
+        details: { price: payload.price, promo_price: payload.promo_price },
+      });
       toast.success("Menu diperbarui");
     } else {
-      const { error } = await supabase.from("menus").insert(payload);
+      const { data, error } = await supabase.from("menus").insert(payload).select("id").single();
       if (error) return toast.error(error.message);
+      await logActivity({
+        action: "menu_created",
+        entity_type: "menu",
+        entity_id: data?.id,
+        entity_label: payload.name,
+        details: { price: payload.price, category: payload.category },
+      });
       toast.success("Menu ditambahkan");
     }
     setOpen(false);
     load();
   }
 
-  async function remove(id: string) {
+  async function remove(id: string, name: string) {
     const { error } = await supabase.from("menus").delete().eq("id", id);
     if (error) return toast.error(error.message);
+    await logActivity({
+      action: "menu_deleted",
+      entity_type: "menu",
+      entity_id: id,
+      entity_label: name,
+    });
     toast.success("Menu dihapus");
     load();
   }
 
   async function toggleAvailable(m: MenuRow) {
+    const next = !m.is_available;
     const { error } = await supabase
       .from("menus")
-      .update({ is_available: !m.is_available })
+      .update({ is_available: next })
       .eq("id", m.id);
     if (error) return toast.error(error.message);
+    await logActivity({
+      action: "menu_availability_toggled",
+      entity_type: "menu",
+      entity_id: m.id,
+      entity_label: m.name,
+      details: { is_available: next },
+    });
     load();
   }
 
