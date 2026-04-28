@@ -1,5 +1,6 @@
 import { Link } from "@tanstack/react-router";
-import { Flame, ShoppingCart, User, LogOut, LayoutDashboard, Bike, ShieldCheck } from "lucide-react";
+import { ShoppingCart, User, LogOut, LayoutDashboard, Bike, ShieldCheck } from "lucide-react";
+import logo from "@/assets/logo.png";
 import { useAuth } from "@/lib/auth";
 import { useCart } from "@/lib/cart-store";
 import { Button } from "@/components/ui/button";
@@ -19,9 +20,7 @@ export function Navbar() {
     <header className="sticky top-0 z-40 border-b border-border/60 bg-background/85 backdrop-blur-md">
       <div className="container mx-auto flex h-16 items-center justify-between px-4">
         <Link to="/" className="flex items-center gap-2">
-          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-gradient-warm shadow-warm">
-            <Flame className="h-5 w-5 text-primary-foreground" />
-          </div>
+          <img src={logo} alt="Juragan Geprek" className="h-10 w-10 object-contain" />
           <div className="leading-tight">
             <div className="font-display text-lg font-bold text-foreground">Juragan Geprek</div>
             <div className="text-[10px] uppercase tracking-widest text-muted-foreground">E-Catering</div>
