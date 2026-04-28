@@ -132,6 +132,9 @@ function SuperAdminPage() {
           <TabsTrigger value="menus" className="gap-2">
             <UtensilsCrossed className="h-4 w-4" /> Kelola Menu
           </TabsTrigger>
+          <TabsTrigger value="audit" className="gap-2">
+            <History className="h-4 w-4" /> Audit Log
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="users" className="mt-6">
@@ -139,6 +142,9 @@ function SuperAdminPage() {
         </TabsContent>
         <TabsContent value="menus" className="mt-6">
           <MenusTab />
+        </TabsContent>
+        <TabsContent value="audit" className="mt-6">
+          <AuditTab />
         </TabsContent>
       </Tabs>
     </div>
@@ -187,7 +193,8 @@ function UsersTab({ currentUserId }: { currentUserId: string }) {
     load();
   }, []);
 
-  async function changeRole(userId: string, newRole: AppRole) {
+  async function changeRole(userId: string, userLabel: string, oldRole: AppRole, newRole: AppRole) {
+    if (oldRole === newRole) return;
     const { error: delErr } = await supabase
       .from("user_roles")
       .delete()
@@ -197,6 +204,13 @@ function UsersTab({ currentUserId }: { currentUserId: string }) {
       .from("user_roles")
       .insert({ user_id: userId, role: newRole });
     if (insErr) return toast.error(insErr.message);
+    await logActivity({
+      action: "role_changed",
+      entity_type: "user",
+      entity_id: userId,
+      entity_label: userLabel,
+      details: { from: oldRole, to: newRole },
+    });
     toast.success(`Role diubah menjadi ${newRole}`);
     load();
   }
