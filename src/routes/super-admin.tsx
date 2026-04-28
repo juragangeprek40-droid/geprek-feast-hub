@@ -659,18 +659,75 @@ function MenusTab() {
                 )}
                 <Input
                   type="file"
-                  accept="image/*"
+                  accept={ALLOWED_IMAGE_EXTENSIONS.map((e) => `.${e}`).join(",")}
                   disabled={uploading}
                   onChange={(e) => {
                     const f = e.target.files?.[0];
                     if (f) handleUpload(f);
+                    e.target.value = "";
                   }}
                 />
               </div>
+              <p className="mt-1 text-[11px] text-muted-foreground">
+                Format: {ALLOWED_IMAGE_EXTENSIONS.join(", ").toUpperCase()} · Maks {MAX_IMAGE_SIZE_MB} MB
+              </p>
               {uploading && (
                 <p className="mt-1 text-xs text-muted-foreground">Mengunggah...</p>
               )}
             </div>
+
+            <div className="rounded-lg border border-destructive/30 bg-destructive/5 p-3 space-y-3">
+              <div className="flex items-center gap-2 text-sm font-semibold text-destructive">
+                <Tag className="h-4 w-4" /> Pengaturan Promo (opsional)
+              </div>
+              <div>
+                <Label className="text-xs">Harga Promo (Rp)</Label>
+                <Input
+                  type="number"
+                  min={0}
+                  placeholder="Kosongkan jika tidak ada promo"
+                  value={form.promo_price ?? ""}
+                  onChange={(e) =>
+                    setForm({
+                      ...form,
+                      promo_price: e.target.value ? Number(e.target.value) : null,
+                    })
+                  }
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <Label className="text-xs">Mulai Promo</Label>
+                  <Input
+                    type="datetime-local"
+                    value={form.promo_start_at ? toLocalInput(form.promo_start_at) : ""}
+                    onChange={(e) =>
+                      setForm({
+                        ...form,
+                        promo_start_at: e.target.value ? new Date(e.target.value).toISOString() : null,
+                      })
+                    }
+                  />
+                </div>
+                <div>
+                  <Label className="text-xs">Akhir Promo</Label>
+                  <Input
+                    type="datetime-local"
+                    value={form.promo_end_at ? toLocalInput(form.promo_end_at) : ""}
+                    onChange={(e) =>
+                      setForm({
+                        ...form,
+                        promo_end_at: e.target.value ? new Date(e.target.value).toISOString() : null,
+                      })
+                    }
+                  />
+                </div>
+              </div>
+              <p className="text-[11px] text-muted-foreground">
+                Kosongkan tanggal untuk promo tanpa batas. Harga promo otomatis tampil di katalog selama aktif.
+              </p>
+            </div>
+
             <label className="flex items-center gap-2">
               <Switch
                 checked={form.is_available}
