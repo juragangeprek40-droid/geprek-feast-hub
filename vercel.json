@@ -5,7 +5,9 @@
   "installCommand": "bun install",
   "framework": null,
   "rewrites": [
-    { "source": "/((?!.*\\..*).*)", "destination": "/index.html" }
+    { "source": "/assets/(.*)", "destination": "/assets/$1" },
+    { "source": "/favicon.png", "destination": "/favicon.png" },
+    { "source": "/(.*)", "destination": "/api/index" }
   ],
   "headers": [
     {
