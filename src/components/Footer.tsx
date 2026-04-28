@@ -1,4 +1,4 @@
-import { Flame } from "lucide-react";
+import logo from "@/assets/logo.png";
 
 export function Footer() {
   return (
@@ -6,9 +6,7 @@ export function Footer() {
       <div className="container mx-auto px-4 py-10 grid gap-8 md:grid-cols-3">
         <div>
           <div className="flex items-center gap-2">
-            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-gradient-warm">
-              <Flame className="h-5 w-5 text-primary-foreground" />
-            </div>
+            <img src={logo} alt="Juragan Geprek" className="h-10 w-10 object-contain" />
             <div className="font-display text-lg font-bold">Juragan Geprek</div>
           </div>
           <p className="mt-3 text-sm text-muted-foreground max-w-xs">
