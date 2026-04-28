@@ -5,11 +5,12 @@ export type ActivityAction =
   | "menu_created"
   | "menu_updated"
   | "menu_deleted"
-  | "menu_availability_toggled";
+  | "menu_availability_toggled"
+  | "settings_updated";
 
 interface LogParams {
   action: ActivityAction;
-  entity_type: "user" | "menu";
+  entity_type: "user" | "menu" | "site_settings";
   entity_id?: string | null;
   entity_label?: string | null;
   details?: Record<string, unknown>;
