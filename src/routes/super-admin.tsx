@@ -37,6 +37,9 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { formatRupiah } from "@/lib/cart-store";
+import { logActivity } from "@/lib/activity-log";
+import { validateImageFile, MAX_IMAGE_SIZE_MB, ALLOWED_IMAGE_EXTENSIONS } from "@/lib/file-validation";
+import { isPromoActive } from "@/lib/promo";
 import { toast } from "sonner";
 import {
   ShieldAlert,
@@ -48,6 +51,8 @@ import {
   ShieldCheck,
   Bike,
   User as UserIcon,
+  History,
+  Tag,
 } from "lucide-react";
 
 export const Route = createFileRoute("/super-admin")({
@@ -75,6 +80,9 @@ interface MenuRow {
   image_url: string | null;
   is_available: boolean;
   min_portion: number;
+  promo_price: number | null;
+  promo_start_at: string | null;
+  promo_end_at: string | null;
 }
 
 function SuperAdminPage() {
