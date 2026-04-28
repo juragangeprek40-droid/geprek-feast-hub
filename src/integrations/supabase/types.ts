@@ -14,6 +14,42 @@ export type Database = {
   }
   public: {
     Tables: {
+      activity_logs: {
+        Row: {
+          action: string
+          actor_id: string | null
+          actor_name: string | null
+          created_at: string
+          details: Json | null
+          entity_id: string | null
+          entity_label: string | null
+          entity_type: string
+          id: string
+        }
+        Insert: {
+          action: string
+          actor_id?: string | null
+          actor_name?: string | null
+          created_at?: string
+          details?: Json | null
+          entity_id?: string | null
+          entity_label?: string | null
+          entity_type: string
+          id?: string
+        }
+        Update: {
+          action?: string
+          actor_id?: string | null
+          actor_name?: string | null
+          created_at?: string
+          details?: Json | null
+          entity_id?: string | null
+          entity_label?: string | null
+          entity_type?: string
+          id?: string
+        }
+        Relationships: []
+      }
       menus: {
         Row: {
           category: Database["public"]["Enums"]["menu_category"]
@@ -25,6 +61,9 @@ export type Database = {
           min_portion: number
           name: string
           price: number
+          promo_end_at: string | null
+          promo_price: number | null
+          promo_start_at: string | null
           updated_at: string
         }
         Insert: {
@@ -37,6 +76,9 @@ export type Database = {
           min_portion?: number
           name: string
           price: number
+          promo_end_at?: string | null
+          promo_price?: number | null
+          promo_start_at?: string | null
           updated_at?: string
         }
         Update: {
@@ -49,6 +91,9 @@ export type Database = {
           min_portion?: number
           name?: string
           price?: number
+          promo_end_at?: string | null
+          promo_price?: number | null
+          promo_start_at?: string | null
           updated_at?: string
         }
         Relationships: []

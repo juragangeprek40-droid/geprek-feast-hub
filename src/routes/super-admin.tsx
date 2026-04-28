@@ -37,6 +37,9 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { formatRupiah } from "@/lib/cart-store";
+import { logActivity } from "@/lib/activity-log";
+import { validateImageFile, MAX_IMAGE_SIZE_MB, ALLOWED_IMAGE_EXTENSIONS } from "@/lib/file-validation";
+import { isPromoActive } from "@/lib/promo";
 import { toast } from "sonner";
 import {
   ShieldAlert,
@@ -48,6 +51,8 @@ import {
   ShieldCheck,
   Bike,
   User as UserIcon,
+  History,
+  Tag,
 } from "lucide-react";
 
 export const Route = createFileRoute("/super-admin")({
@@ -75,6 +80,9 @@ interface MenuRow {
   image_url: string | null;
   is_available: boolean;
   min_portion: number;
+  promo_price: number | null;
+  promo_start_at: string | null;
+  promo_end_at: string | null;
 }
 
 function SuperAdminPage() {
@@ -124,6 +132,9 @@ function SuperAdminPage() {
           <TabsTrigger value="menus" className="gap-2">
             <UtensilsCrossed className="h-4 w-4" /> Kelola Menu
           </TabsTrigger>
+          <TabsTrigger value="audit" className="gap-2">
+            <History className="h-4 w-4" /> Audit Log
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="users" className="mt-6">
@@ -131,6 +142,9 @@ function SuperAdminPage() {
         </TabsContent>
         <TabsContent value="menus" className="mt-6">
           <MenusTab />
+        </TabsContent>
+        <TabsContent value="audit" className="mt-6">
+          <AuditTab />
         </TabsContent>
       </Tabs>
     </div>
@@ -179,7 +193,8 @@ function UsersTab({ currentUserId }: { currentUserId: string }) {
     load();
   }, []);
 
-  async function changeRole(userId: string, newRole: AppRole) {
+  async function changeRole(userId: string, userLabel: string, oldRole: AppRole, newRole: AppRole) {
+    if (oldRole === newRole) return;
     const { error: delErr } = await supabase
       .from("user_roles")
       .delete()
@@ -189,6 +204,13 @@ function UsersTab({ currentUserId }: { currentUserId: string }) {
       .from("user_roles")
       .insert({ user_id: userId, role: newRole });
     if (insErr) return toast.error(insErr.message);
+    await logActivity({
+      action: "role_changed",
+      entity_type: "user",
+      entity_id: userId,
+      entity_label: userLabel,
+      details: { from: oldRole, to: newRole },
+    });
     toast.success(`Role diubah menjadi ${newRole}`);
     load();
   }
@@ -259,7 +281,7 @@ function UsersTab({ currentUserId }: { currentUserId: string }) {
                   <Badge className="capitalize">{primaryRole}</Badge>
                   <Select
                     value={primaryRole}
-                    onValueChange={(v) => changeRole(u.id, v as AppRole)}
+                    onValueChange={(v) => changeRole(u.id, u.full_name || u.id, primaryRole, v as AppRole)}
                     disabled={isSelf}
                   >
                     <SelectTrigger className="h-8 w-[140px] text-xs">
@@ -300,6 +322,9 @@ const EMPTY_MENU: Omit<MenuRow, "id"> = {
   image_url: "",
   is_available: true,
   min_portion: 1,
+  promo_price: null,
+  promo_start_at: null,
+  promo_end_at: null,
 };
 
 function MenusTab() {
@@ -342,17 +367,25 @@ function MenusTab() {
       image_url: m.image_url ?? "",
       is_available: m.is_available,
       min_portion: m.min_portion,
+      promo_price: m.promo_price != null ? Number(m.promo_price) : null,
+      promo_start_at: m.promo_start_at,
+      promo_end_at: m.promo_end_at,
     });
     setOpen(true);
   }
 
   async function handleUpload(file: File) {
+    const v = validateImageFile(file);
+    if (!v.valid) {
+      toast.error(v.error!);
+      return;
+    }
     setUploading(true);
     const ext = file.name.split(".").pop();
     const path = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
     const { error } = await supabase.storage
       .from("menu-images")
-      .upload(path, file, { upsert: false });
+      .upload(path, file, { upsert: false, contentType: file.type });
     if (error) {
       setUploading(false);
       return toast.error(error.message);
@@ -363,11 +396,20 @@ function MenusTab() {
     toast.success("Gambar diunggah");
   }
 
+
   async function save() {
     if (!form.name.trim()) return toast.error("Nama menu wajib diisi");
     if (form.price <= 0) return toast.error("Harga harus lebih dari 0");
+    if (form.promo_price != null && form.promo_price > 0) {
+      if (form.promo_price >= form.price) {
+        return toast.error("Harga promo harus lebih kecil dari harga normal");
+      }
+      if (form.promo_start_at && form.promo_end_at && new Date(form.promo_start_at) >= new Date(form.promo_end_at)) {
+        return toast.error("Tanggal akhir promo harus setelah tanggal mulai");
+      }
+    }
 
-    const payload = {
+    const payload: any = {
       name: form.name.trim(),
       description: form.description?.trim() || null,
       price: form.price,
@@ -375,6 +417,9 @@ function MenusTab() {
       image_url: form.image_url?.trim() || null,
       is_available: form.is_available,
       min_portion: form.min_portion,
+      promo_price: form.promo_price && form.promo_price > 0 ? form.promo_price : null,
+      promo_start_at: form.promo_start_at || null,
+      promo_end_at: form.promo_end_at || null,
     };
 
     if (editing) {
@@ -383,29 +428,57 @@ function MenusTab() {
         .update(payload)
         .eq("id", editing.id);
       if (error) return toast.error(error.message);
+      await logActivity({
+        action: "menu_updated",
+        entity_type: "menu",
+        entity_id: editing.id,
+        entity_label: payload.name,
+        details: { price: payload.price, promo_price: payload.promo_price },
+      });
       toast.success("Menu diperbarui");
     } else {
-      const { error } = await supabase.from("menus").insert(payload);
+      const { data, error } = await supabase.from("menus").insert(payload).select("id").single();
       if (error) return toast.error(error.message);
+      await logActivity({
+        action: "menu_created",
+        entity_type: "menu",
+        entity_id: data?.id,
+        entity_label: payload.name,
+        details: { price: payload.price, category: payload.category },
+      });
       toast.success("Menu ditambahkan");
     }
     setOpen(false);
     load();
   }
 
-  async function remove(id: string) {
+  async function remove(id: string, name: string) {
     const { error } = await supabase.from("menus").delete().eq("id", id);
     if (error) return toast.error(error.message);
+    await logActivity({
+      action: "menu_deleted",
+      entity_type: "menu",
+      entity_id: id,
+      entity_label: name,
+    });
     toast.success("Menu dihapus");
     load();
   }
 
   async function toggleAvailable(m: MenuRow) {
+    const next = !m.is_available;
     const { error } = await supabase
       .from("menus")
-      .update({ is_available: !m.is_available })
+      .update({ is_available: next })
       .eq("id", m.id);
     if (error) return toast.error(error.message);
+    await logActivity({
+      action: "menu_availability_toggled",
+      entity_type: "menu",
+      entity_id: m.id,
+      entity_label: m.name,
+      details: { is_available: next },
+    });
     load();
   }
 
@@ -490,7 +563,7 @@ function MenusTab() {
                         <AlertDialogFooter>
                           <AlertDialogCancel>Batal</AlertDialogCancel>
                           <AlertDialogAction
-                            onClick={() => remove(m.id)}
+                            onClick={() => remove(m.id, m.name)}
                             className="bg-destructive text-destructive-foreground"
                           >
                             Hapus
@@ -586,18 +659,75 @@ function MenusTab() {
                 )}
                 <Input
                   type="file"
-                  accept="image/*"
+                  accept={ALLOWED_IMAGE_EXTENSIONS.map((e) => `.${e}`).join(",")}
                   disabled={uploading}
                   onChange={(e) => {
                     const f = e.target.files?.[0];
                     if (f) handleUpload(f);
+                    e.target.value = "";
                   }}
                 />
               </div>
+              <p className="mt-1 text-[11px] text-muted-foreground">
+                Format: {ALLOWED_IMAGE_EXTENSIONS.join(", ").toUpperCase()} · Maks {MAX_IMAGE_SIZE_MB} MB
+              </p>
               {uploading && (
                 <p className="mt-1 text-xs text-muted-foreground">Mengunggah...</p>
               )}
             </div>
+
+            <div className="rounded-lg border border-destructive/30 bg-destructive/5 p-3 space-y-3">
+              <div className="flex items-center gap-2 text-sm font-semibold text-destructive">
+                <Tag className="h-4 w-4" /> Pengaturan Promo (opsional)
+              </div>
+              <div>
+                <Label className="text-xs">Harga Promo (Rp)</Label>
+                <Input
+                  type="number"
+                  min={0}
+                  placeholder="Kosongkan jika tidak ada promo"
+                  value={form.promo_price ?? ""}
+                  onChange={(e) =>
+                    setForm({
+                      ...form,
+                      promo_price: e.target.value ? Number(e.target.value) : null,
+                    })
+                  }
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <Label className="text-xs">Mulai Promo</Label>
+                  <Input
+                    type="datetime-local"
+                    value={form.promo_start_at ? toLocalInput(form.promo_start_at) : ""}
+                    onChange={(e) =>
+                      setForm({
+                        ...form,
+                        promo_start_at: e.target.value ? new Date(e.target.value).toISOString() : null,
+                      })
+                    }
+                  />
+                </div>
+                <div>
+                  <Label className="text-xs">Akhir Promo</Label>
+                  <Input
+                    type="datetime-local"
+                    value={form.promo_end_at ? toLocalInput(form.promo_end_at) : ""}
+                    onChange={(e) =>
+                      setForm({
+                        ...form,
+                        promo_end_at: e.target.value ? new Date(e.target.value).toISOString() : null,
+                      })
+                    }
+                  />
+                </div>
+              </div>
+              <p className="text-[11px] text-muted-foreground">
+                Kosongkan tanggal untuk promo tanpa batas. Harga promo otomatis tampil di katalog selama aktif.
+              </p>
+            </div>
+
             <label className="flex items-center gap-2">
               <Switch
                 checked={form.is_available}
@@ -622,4 +752,140 @@ function MenusTab() {
       </Dialog>
     </Card>
   );
+}
+
+/* ---------------- HELPERS ---------------- */
+
+function toLocalInput(iso: string): string {
+  const d = new Date(iso);
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+
+/* ---------------- AUDIT TAB ---------------- */
+
+interface ActivityLog {
+  id: string;
+  actor_id: string | null;
+  actor_name: string | null;
+  action: string;
+  entity_type: string;
+  entity_id: string | null;
+  entity_label: string | null;
+  details: any;
+  created_at: string;
+}
+
+const ACTION_LABEL: Record<string, string> = {
+  role_changed: "Mengubah role",
+  menu_created: "Menambah menu",
+  menu_updated: "Memperbarui menu",
+  menu_deleted: "Menghapus menu",
+  menu_availability_toggled: "Mengubah ketersediaan menu",
+};
+
+function AuditTab() {
+  const [logs, setLogs] = useState<ActivityLog[]>([]);
+  const [busy, setBusy] = useState(true);
+  const [filter, setFilter] = useState<string>("all");
+
+  async function load() {
+    setBusy(true);
+    const { data, error } = await (supabase.from("activity_logs") as any)
+      .select("*")
+      .order("created_at", { ascending: false })
+      .limit(200);
+    if (error) toast.error(error.message);
+    setLogs((data ?? []) as ActivityLog[]);
+    setBusy(false);
+  }
+
+  useEffect(() => {
+    load();
+  }, []);
+
+  const filtered = logs.filter((l) => {
+    if (filter === "all") return true;
+    if (filter === "user") return l.entity_type === "user";
+    if (filter === "menu") return l.entity_type === "menu";
+    return true;
+  });
+
+  return (
+    <Card className="p-5 shadow-soft">
+      <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <h2 className="font-display text-xl font-bold">Riwayat Aktivitas</h2>
+          <p className="text-sm text-muted-foreground">
+            {logs.length} catatan terakhir (maks. 200). Audit trail siapa mengubah apa & kapan.
+          </p>
+        </div>
+        <Select value={filter} onValueChange={setFilter}>
+          <SelectTrigger className="w-[180px]">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Semua aktivitas</SelectItem>
+            <SelectItem value="user">Perubahan Role</SelectItem>
+            <SelectItem value="menu">Aktivitas Menu</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+
+      {busy ? (
+        <p className="py-10 text-center text-muted-foreground">Memuat...</p>
+      ) : filtered.length === 0 ? (
+        <p className="py-10 text-center text-muted-foreground">Belum ada aktivitas tercatat.</p>
+      ) : (
+        <div className="space-y-2">
+          {filtered.map((l) => (
+            <div
+              key={l.id}
+              className="flex flex-wrap items-start justify-between gap-3 rounded-lg border border-border/60 bg-secondary/30 p-3 text-sm"
+            >
+              <div className="flex items-start gap-3 min-w-0 flex-1">
+                <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
+                  {l.entity_type === "user" ? <UserIcon className="h-4 w-4" /> : <UtensilsCrossed className="h-4 w-4" />}
+                </div>
+                <div className="min-w-0">
+                  <div>
+                    <span className="font-semibold">{l.actor_name || "Sistem"}</span>{" "}
+                    <span className="text-muted-foreground">
+                      {ACTION_LABEL[l.action] || l.action}
+                    </span>{" "}
+                    {l.entity_label && (
+                      <span className="font-medium">"{l.entity_label}"</span>
+                    )}
+                  </div>
+                  {l.details && (
+                    <div className="mt-0.5 text-xs text-muted-foreground">
+                      {formatDetails(l.action, l.details)}
+                    </div>
+                  )}
+                </div>
+              </div>
+              <div className="text-xs text-muted-foreground whitespace-nowrap">
+                {new Date(l.created_at).toLocaleString("id-ID", { dateStyle: "medium", timeStyle: "short" })}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </Card>
+  );
+}
+
+function formatDetails(action: string, details: any): string {
+  if (!details) return "";
+  if (action === "role_changed") return `Dari "${details.from}" → "${details.to}"`;
+  if (action === "menu_availability_toggled")
+    return details.is_available ? "Diaktifkan kembali" : "Ditandai habis";
+  if (action === "menu_created" || action === "menu_updated") {
+    const parts: string[] = [];
+    if (details.price) parts.push(`harga Rp ${Number(details.price).toLocaleString("id-ID")}`);
+    if (details.promo_price) parts.push(`promo Rp ${Number(details.promo_price).toLocaleString("id-ID")}`);
+    if (details.category) parts.push(details.category);
+    return parts.join(" · ");
+  }
+  return "";
 }
