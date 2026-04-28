@@ -53,7 +53,15 @@ import {
   User as UserIcon,
   History,
   Tag,
+  Settings as SettingsIcon,
+  Save,
 } from "lucide-react";
+import {
+  fetchSiteSettings,
+  upsertSettingSection,
+  DEFAULT_SETTINGS,
+  type SiteSettings,
+} from "@/lib/site-settings";
 
 export const Route = createFileRoute("/super-admin")({
   head: () => ({ meta: [{ title: "Super Admin — Juragan Geprek" }] }),
@@ -135,6 +143,9 @@ function SuperAdminPage() {
           <TabsTrigger value="audit" className="gap-2">
             <History className="h-4 w-4" /> Audit Log
           </TabsTrigger>
+          <TabsTrigger value="settings" className="gap-2">
+            <SettingsIcon className="h-4 w-4" /> Pengaturan Website
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="users" className="mt-6">
@@ -145,6 +156,9 @@ function SuperAdminPage() {
         </TabsContent>
         <TabsContent value="audit" className="mt-6">
           <AuditTab />
+        </TabsContent>
+        <TabsContent value="settings" className="mt-6">
+          <SettingsTab userId={user.id} />
         </TabsContent>
       </Tabs>
     </div>
