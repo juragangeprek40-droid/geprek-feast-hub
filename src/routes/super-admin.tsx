@@ -281,7 +281,7 @@ function UsersTab({ currentUserId }: { currentUserId: string }) {
                   <Badge className="capitalize">{primaryRole}</Badge>
                   <Select
                     value={primaryRole}
-                    onValueChange={(v) => changeRole(u.id, v as AppRole)}
+                    onValueChange={(v) => changeRole(u.id, u.full_name || u.id, primaryRole, v as AppRole)}
                     disabled={isSelf}
                   >
                     <SelectTrigger className="h-8 w-[140px] text-xs">
@@ -322,6 +322,9 @@ const EMPTY_MENU: Omit<MenuRow, "id"> = {
   image_url: "",
   is_available: true,
   min_portion: 1,
+  promo_price: null,
+  promo_start_at: null,
+  promo_end_at: null,
 };
 
 function MenusTab() {
@@ -364,8 +367,33 @@ function MenusTab() {
       image_url: m.image_url ?? "",
       is_available: m.is_available,
       min_portion: m.min_portion,
+      promo_price: m.promo_price != null ? Number(m.promo_price) : null,
+      promo_start_at: m.promo_start_at,
+      promo_end_at: m.promo_end_at,
     });
     setOpen(true);
+  }
+
+  async function handleUpload(file: File) {
+    const v = validateImageFile(file);
+    if (!v.valid) {
+      toast.error(v.error!);
+      return;
+    }
+    setUploading(true);
+    const ext = file.name.split(".").pop();
+    const path = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
+    const { error } = await supabase.storage
+      .from("menu-images")
+      .upload(path, file, { upsert: false, contentType: file.type });
+    if (error) {
+      setUploading(false);
+      return toast.error(error.message);
+    }
+    const { data } = supabase.storage.from("menu-images").getPublicUrl(path);
+    setForm((f) => ({ ...f, image_url: data.publicUrl }));
+    setUploading(false);
+    toast.success("Gambar diunggah");
   }
 
   async function handleUpload(file: File) {
