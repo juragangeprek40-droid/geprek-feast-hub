@@ -1,5 +1,5 @@
 import { Link } from "@tanstack/react-router";
-import { Flame, ShoppingCart, User, LogOut, LayoutDashboard, Bike } from "lucide-react";
+import { Flame, ShoppingCart, User, LogOut, LayoutDashboard, Bike, ShieldCheck } from "lucide-react";
 import { useAuth } from "@/lib/auth";
 import { useCart } from "@/lib/cart-store";
 import { Button } from "@/components/ui/button";
@@ -71,9 +71,14 @@ export function Navbar() {
                   <DropdownMenuItem><User className="mr-2 h-4 w-4" />Pesanan Saya</DropdownMenuItem>
                 </Link>
                 {isAdmin && (
-                  <Link to="/admin">
-                    <DropdownMenuItem><LayoutDashboard className="mr-2 h-4 w-4" />Dashboard Admin</DropdownMenuItem>
-                  </Link>
+                  <>
+                    <Link to="/admin">
+                      <DropdownMenuItem><LayoutDashboard className="mr-2 h-4 w-4" />Dashboard Admin</DropdownMenuItem>
+                    </Link>
+                    <Link to="/super-admin">
+                      <DropdownMenuItem><ShieldCheck className="mr-2 h-4 w-4" />Super Admin</DropdownMenuItem>
+                    </Link>
+                  </>
                 )}
                 {isKurir && (
                   <Link to="/kurir">
