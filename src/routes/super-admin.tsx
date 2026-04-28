@@ -563,7 +563,7 @@ function MenusTab() {
                         <AlertDialogFooter>
                           <AlertDialogCancel>Batal</AlertDialogCancel>
                           <AlertDialogAction
-                            onClick={() => remove(m.id)}
+                            onClick={() => remove(m.id, m.name)}
                             className="bg-destructive text-destructive-foreground"
                           >
                             Hapus
