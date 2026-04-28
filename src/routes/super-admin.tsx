@@ -796,6 +796,7 @@ const ACTION_LABEL: Record<string, string> = {
   menu_updated: "Memperbarui menu",
   menu_deleted: "Menghapus menu",
   menu_availability_toggled: "Mengubah ketersediaan menu",
+  settings_updated: "Memperbarui pengaturan",
 };
 
 function AuditTab() {
