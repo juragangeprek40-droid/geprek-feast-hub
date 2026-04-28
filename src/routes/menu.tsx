@@ -11,7 +11,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { cartStore, formatRupiah, type SpiceLevel } from "@/lib/cart-store";
-import { Flame, Plus } from "lucide-react";
+import { isPromoActive, effectivePrice, discountPercent } from "@/lib/promo";
+import { Flame, Plus, Tag } from "lucide-react";
 import { toast } from "sonner";
 import menuGeprekImg from "@/assets/menu-geprek.jpg";
 import menuPaketImg from "@/assets/menu-paket.jpg";
@@ -35,6 +36,9 @@ interface Menu {
   image_url: string | null;
   is_available: boolean;
   min_portion: number;
+  promo_price: number | null;
+  promo_start_at: string | null;
+  promo_end_at: string | null;
 }
 
 const fallbackImg = (cat: string) => (cat === "paket" ? menuPaketImg : menuGeprekImg);
@@ -102,11 +106,15 @@ function MenuCard({ menu }: { menu: Menu }) {
   const [spice, setSpice] = useState<SpiceLevel>("sedang");
   const [extras, setExtras] = useState("");
 
+  const onPromo = isPromoActive(menu);
+  const unitPrice = effectivePrice(menu);
+  const discount = discountPercent(menu);
+
   function add() {
     cartStore.add({
       menuId: menu.id,
       name: menu.name,
-      price: menu.price,
+      price: unitPrice,
       category: menu.category,
       quantity: qty,
       spiceLevel: spice,
@@ -121,8 +129,13 @@ function MenuCard({ menu }: { menu: Menu }) {
 
   return (
     <Card className="group overflow-hidden border-border/60 bg-card shadow-soft transition hover:shadow-warm">
-      <div className="aspect-[4/3] overflow-hidden bg-muted">
+      <div className="relative aspect-[4/3] overflow-hidden bg-muted">
         <img src={menu.image_url || fallbackImg(menu.category)} alt={menu.name} loading="lazy" className="h-full w-full object-cover transition group-hover:scale-105" />
+        {onPromo && (
+          <div className="absolute left-2 top-2 flex items-center gap-1 rounded-full bg-destructive px-2.5 py-1 text-xs font-bold text-destructive-foreground shadow-warm">
+            <Tag className="h-3 w-3" /> -{discount}%
+          </div>
+        )}
       </div>
       <div className="p-4 space-y-2">
         <div className="flex items-start justify-between gap-2">
@@ -132,7 +145,21 @@ function MenuCard({ menu }: { menu: Menu }) {
         <p className="text-sm text-muted-foreground line-clamp-2 min-h-[2.5rem]">{menu.description}</p>
         <div className="flex items-center justify-between pt-2">
           <div>
-            <div className="font-display text-xl font-bold text-primary">{formatRupiah(menu.price)}</div>
+            {onPromo ? (
+              <>
+                <div className="flex items-baseline gap-2">
+                  <span className="font-display text-xl font-bold text-primary">{formatRupiah(unitPrice)}</span>
+                  <span className="text-xs text-muted-foreground line-through">{formatRupiah(menu.price)}</span>
+                </div>
+                {menu.promo_end_at && (
+                  <div className="text-[10px] text-destructive font-medium">
+                    Promo s/d {new Date(menu.promo_end_at).toLocaleDateString("id-ID", { day: "numeric", month: "short" })}
+                  </div>
+                )}
+              </>
+            ) : (
+              <div className="font-display text-xl font-bold text-primary">{formatRupiah(menu.price)}</div>
+            )}
             {menu.category === "paket" && <div className="text-xs text-muted-foreground">min. {menu.min_portion} porsi</div>}
           </div>
           <Dialog open={open} onOpenChange={setOpen}>
@@ -142,6 +169,11 @@ function MenuCard({ menu }: { menu: Menu }) {
             <DialogContent>
               <DialogHeader><DialogTitle>{menu.name}</DialogTitle></DialogHeader>
               <div className="space-y-4">
+                {onPromo && (
+                  <div className="rounded-lg bg-destructive/10 border border-destructive/30 p-2 text-xs text-destructive flex items-center gap-2">
+                    <Tag className="h-3.5 w-3.5" /> Harga promo aktif — hemat {discount}%
+                  </div>
+                )}
                 <div>
                   <Label>Jumlah porsi (min. {menu.min_portion})</Label>
                   <Input type="number" min={menu.min_portion} value={qty} onChange={(e) => setQty(Math.max(menu.min_portion, Number(e.target.value)))} />
@@ -164,7 +196,7 @@ function MenuCard({ menu }: { menu: Menu }) {
                 </div>
                 <div className="flex items-center justify-between rounded-lg bg-secondary p-3">
                   <span className="text-sm">Subtotal</span>
-                  <span className="font-display text-lg font-bold text-primary">{formatRupiah(menu.price * qty)}</span>
+                  <span className="font-display text-lg font-bold text-primary">{formatRupiah(unitPrice * qty)}</span>
                 </div>
               </div>
               <DialogFooter><Button onClick={add} className="bg-gradient-warm text-primary-foreground">Tambah ke Pesanan</Button></DialogFooter>

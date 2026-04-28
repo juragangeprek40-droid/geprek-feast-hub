@@ -28,7 +28,7 @@ export async function logActivity(params: LogParams) {
     .maybeSingle();
   if (prof?.full_name) actorName = prof.full_name;
 
-  await supabase.from("activity_logs").insert({
+  await (supabase.from("activity_logs") as any).insert({
     actor_id: u.id,
     actor_name: actorName,
     action: params.action,
