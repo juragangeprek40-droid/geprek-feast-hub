@@ -1,0 +1,625 @@
+import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
+import { useEffect, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/lib/auth";
+import { Card } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Switch } from "@/components/ui/switch";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import { formatRupiah } from "@/lib/cart-store";
+import { toast } from "sonner";
+import {
+  ShieldAlert,
+  Users,
+  UtensilsCrossed,
+  Plus,
+  Pencil,
+  Trash2,
+  ShieldCheck,
+  Bike,
+  User as UserIcon,
+} from "lucide-react";
+
+export const Route = createFileRoute("/super-admin")({
+  head: () => ({ meta: [{ title: "Super Admin — Juragan Geprek" }] }),
+  component: SuperAdminPage,
+});
+
+type AppRole = "admin" | "kurir" | "pelanggan";
+
+interface UserRow {
+  id: string;
+  full_name: string | null;
+  phone: string | null;
+  address: string | null;
+  created_at: string;
+  roles: AppRole[];
+}
+
+interface MenuRow {
+  id: string;
+  name: string;
+  description: string | null;
+  price: number;
+  category: "paket" | "satuan";
+  image_url: string | null;
+  is_available: boolean;
+  min_portion: number;
+}
+
+function SuperAdminPage() {
+  const { user, isAdmin, loading } = useAuth();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (!loading && !user) navigate({ to: "/auth" });
+  }, [user, loading, navigate]);
+
+  if (loading) return <div className="container py-20 text-center">Memuat...</div>;
+  if (!user) return null;
+  if (!isAdmin) {
+    return (
+      <div className="container mx-auto px-4 py-20 text-center">
+        <ShieldAlert className="mx-auto h-12 w-12 text-destructive/50" />
+        <h2 className="mt-3 font-display text-xl font-bold">Akses Ditolak</h2>
+        <p className="text-muted-foreground">
+          Halaman ini hanya untuk Super Admin.
+        </p>
+        <Link to="/" className="mt-4 inline-flex">
+          <Button variant="outline">Kembali</Button>
+        </Link>
+      </div>
+    );
+  }
+
+  return (
+    <div className="container mx-auto px-4 py-10">
+      <div className="flex items-center gap-3">
+        <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-warm shadow-warm">
+          <ShieldCheck className="h-6 w-6 text-primary-foreground" />
+        </div>
+        <div>
+          <h1 className="font-display text-3xl font-bold">Super Admin</h1>
+          <p className="text-muted-foreground">
+            Kelola pengguna, peran, dan menu website Juragan Geprek.
+          </p>
+        </div>
+      </div>
+
+      <Tabs defaultValue="users" className="mt-8">
+        <TabsList className="bg-secondary">
+          <TabsTrigger value="users" className="gap-2">
+            <Users className="h-4 w-4" /> Pengguna & Role
+          </TabsTrigger>
+          <TabsTrigger value="menus" className="gap-2">
+            <UtensilsCrossed className="h-4 w-4" /> Kelola Menu
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="users" className="mt-6">
+          <UsersTab currentUserId={user.id} />
+        </TabsContent>
+        <TabsContent value="menus" className="mt-6">
+          <MenusTab />
+        </TabsContent>
+      </Tabs>
+    </div>
+  );
+}
+
+/* ---------------- USERS TAB ---------------- */
+
+function UsersTab({ currentUserId }: { currentUserId: string }) {
+  const [users, setUsers] = useState<UserRow[]>([]);
+  const [busy, setBusy] = useState(true);
+  const [search, setSearch] = useState("");
+
+  async function load() {
+    setBusy(true);
+    const { data: profs, error } = await supabase
+      .from("profiles")
+      .select("id, full_name, phone, address, created_at")
+      .order("created_at", { ascending: false });
+    if (error) {
+      toast.error(error.message);
+      setBusy(false);
+      return;
+    }
+    const ids = (profs ?? []).map((p) => p.id);
+    let rolesMap: Record<string, AppRole[]> = {};
+    if (ids.length) {
+      const { data: rolesData } = await supabase
+        .from("user_roles")
+        .select("user_id, role")
+        .in("user_id", ids);
+      (rolesData ?? []).forEach((r: any) => {
+        rolesMap[r.user_id] = [...(rolesMap[r.user_id] ?? []), r.role];
+      });
+    }
+    setUsers(
+      (profs ?? []).map((p) => ({
+        ...p,
+        roles: rolesMap[p.id] ?? [],
+      }))
+    );
+    setBusy(false);
+  }
+
+  useEffect(() => {
+    load();
+  }, []);
+
+  async function changeRole(userId: string, newRole: AppRole) {
+    const { error: delErr } = await supabase
+      .from("user_roles")
+      .delete()
+      .eq("user_id", userId);
+    if (delErr) return toast.error(delErr.message);
+    const { error: insErr } = await supabase
+      .from("user_roles")
+      .insert({ user_id: userId, role: newRole });
+    if (insErr) return toast.error(insErr.message);
+    toast.success(`Role diubah menjadi ${newRole}`);
+    load();
+  }
+
+  const filtered = users.filter((u) => {
+    const q = search.toLowerCase();
+    return (
+      !q ||
+      u.full_name?.toLowerCase().includes(q) ||
+      u.phone?.toLowerCase().includes(q) ||
+      u.id.toLowerCase().includes(q)
+    );
+  });
+
+  return (
+    <Card className="p-5 shadow-soft">
+      <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <h2 className="font-display text-xl font-bold">Daftar Pengguna</h2>
+          <p className="text-sm text-muted-foreground">
+            Total {users.length} pengguna terdaftar.
+          </p>
+        </div>
+        <Input
+          placeholder="Cari nama / telepon..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          className="w-full max-w-xs"
+        />
+      </div>
+
+      {busy ? (
+        <p className="py-10 text-center text-muted-foreground">Memuat...</p>
+      ) : filtered.length === 0 ? (
+        <p className="py-10 text-center text-muted-foreground">
+          Tidak ada pengguna ditemukan.
+        </p>
+      ) : (
+        <div className="space-y-3">
+          {filtered.map((u) => {
+            const primaryRole: AppRole = u.roles[0] ?? "pelanggan";
+            const isSelf = u.id === currentUserId;
+            return (
+              <div
+                key={u.id}
+                className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-border/60 bg-secondary/30 p-4"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 text-primary">
+                    <RoleIcon role={primaryRole} />
+                  </div>
+                  <div>
+                    <div className="font-semibold">
+                      {u.full_name || "(tanpa nama)"}{" "}
+                      {isSelf && (
+                        <Badge variant="outline" className="ml-1 text-[10px]">
+                          Anda
+                        </Badge>
+                      )}
+                    </div>
+                    <div className="text-xs text-muted-foreground">
+                      {u.phone || "-"} · {new Date(u.created_at).toLocaleDateString("id-ID")}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <Badge className="capitalize">{primaryRole}</Badge>
+                  <Select
+                    value={primaryRole}
+                    onValueChange={(v) => changeRole(u.id, v as AppRole)}
+                    disabled={isSelf}
+                  >
+                    <SelectTrigger className="h-8 w-[140px] text-xs">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="pelanggan">Pelanggan</SelectItem>
+                      <SelectItem value="kurir">Kurir</SelectItem>
+                      <SelectItem value="admin">Admin</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+      <p className="mt-4 text-xs text-muted-foreground">
+        * Anda tidak dapat mengubah role akun Anda sendiri untuk mencegah kehilangan akses admin.
+      </p>
+    </Card>
+  );
+}
+
+function RoleIcon({ role }: { role: AppRole }) {
+  if (role === "admin") return <ShieldCheck className="h-5 w-5" />;
+  if (role === "kurir") return <Bike className="h-5 w-5" />;
+  return <UserIcon className="h-5 w-5" />;
+}
+
+/* ---------------- MENUS TAB ---------------- */
+
+const EMPTY_MENU: Omit<MenuRow, "id"> = {
+  name: "",
+  description: "",
+  price: 0,
+  category: "satuan",
+  image_url: "",
+  is_available: true,
+  min_portion: 1,
+};
+
+function MenusTab() {
+  const [menus, setMenus] = useState<MenuRow[]>([]);
+  const [busy, setBusy] = useState(true);
+  const [open, setOpen] = useState(false);
+  const [editing, setEditing] = useState<MenuRow | null>(null);
+  const [form, setForm] = useState<Omit<MenuRow, "id">>(EMPTY_MENU);
+  const [uploading, setUploading] = useState(false);
+
+  async function load() {
+    setBusy(true);
+    const { data, error } = await supabase
+      .from("menus")
+      .select("*")
+      .order("category", { ascending: true })
+      .order("created_at", { ascending: false });
+    if (error) toast.error(error.message);
+    setMenus((data ?? []) as MenuRow[]);
+    setBusy(false);
+  }
+
+  useEffect(() => {
+    load();
+  }, []);
+
+  function openCreate() {
+    setEditing(null);
+    setForm(EMPTY_MENU);
+    setOpen(true);
+  }
+
+  function openEdit(m: MenuRow) {
+    setEditing(m);
+    setForm({
+      name: m.name,
+      description: m.description ?? "",
+      price: Number(m.price),
+      category: m.category,
+      image_url: m.image_url ?? "",
+      is_available: m.is_available,
+      min_portion: m.min_portion,
+    });
+    setOpen(true);
+  }
+
+  async function handleUpload(file: File) {
+    setUploading(true);
+    const ext = file.name.split(".").pop();
+    const path = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
+    const { error } = await supabase.storage
+      .from("menu-images")
+      .upload(path, file, { upsert: false });
+    if (error) {
+      setUploading(false);
+      return toast.error(error.message);
+    }
+    const { data } = supabase.storage.from("menu-images").getPublicUrl(path);
+    setForm((f) => ({ ...f, image_url: data.publicUrl }));
+    setUploading(false);
+    toast.success("Gambar diunggah");
+  }
+
+  async function save() {
+    if (!form.name.trim()) return toast.error("Nama menu wajib diisi");
+    if (form.price <= 0) return toast.error("Harga harus lebih dari 0");
+
+    const payload = {
+      name: form.name.trim(),
+      description: form.description?.trim() || null,
+      price: form.price,
+      category: form.category,
+      image_url: form.image_url?.trim() || null,
+      is_available: form.is_available,
+      min_portion: form.min_portion,
+    };
+
+    if (editing) {
+      const { error } = await supabase
+        .from("menus")
+        .update(payload)
+        .eq("id", editing.id);
+      if (error) return toast.error(error.message);
+      toast.success("Menu diperbarui");
+    } else {
+      const { error } = await supabase.from("menus").insert(payload);
+      if (error) return toast.error(error.message);
+      toast.success("Menu ditambahkan");
+    }
+    setOpen(false);
+    load();
+  }
+
+  async function remove(id: string) {
+    const { error } = await supabase.from("menus").delete().eq("id", id);
+    if (error) return toast.error(error.message);
+    toast.success("Menu dihapus");
+    load();
+  }
+
+  async function toggleAvailable(m: MenuRow) {
+    const { error } = await supabase
+      .from("menus")
+      .update({ is_available: !m.is_available })
+      .eq("id", m.id);
+    if (error) return toast.error(error.message);
+    load();
+  }
+
+  return (
+    <Card className="p-5 shadow-soft">
+      <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <h2 className="font-display text-xl font-bold">Daftar Menu</h2>
+          <p className="text-sm text-muted-foreground">
+            {menus.length} menu — {menus.filter((m) => m.is_available).length} tersedia
+          </p>
+        </div>
+        <Button onClick={openCreate} className="bg-gradient-warm text-primary-foreground shadow-warm">
+          <Plus className="mr-1 h-4 w-4" /> Tambah Menu
+        </Button>
+      </div>
+
+      {busy ? (
+        <p className="py-10 text-center text-muted-foreground">Memuat...</p>
+      ) : menus.length === 0 ? (
+        <p className="py-10 text-center text-muted-foreground">
+          Belum ada menu. Klik "Tambah Menu" untuk memulai.
+        </p>
+      ) : (
+        <div className="grid gap-3 md:grid-cols-2">
+          {menus.map((m) => (
+            <div
+              key={m.id}
+              className="flex gap-3 rounded-lg border border-border/60 bg-secondary/30 p-3"
+            >
+              <div className="h-20 w-20 flex-shrink-0 overflow-hidden rounded-md bg-muted">
+                {m.image_url ? (
+                  <img src={m.image_url} alt={m.name} className="h-full w-full object-cover" />
+                ) : (
+                  <div className="flex h-full w-full items-center justify-center text-muted-foreground">
+                    <UtensilsCrossed className="h-6 w-6" />
+                  </div>
+                )}
+              </div>
+              <div className="min-w-0 flex-1">
+                <div className="flex items-start justify-between gap-2">
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-2">
+                      <span className="truncate font-semibold">{m.name}</span>
+                      <Badge variant="outline" className="capitalize text-[10px]">
+                        {m.category}
+                      </Badge>
+                    </div>
+                    <div className="font-display text-base font-bold text-primary">
+                      {formatRupiah(Number(m.price))}
+                    </div>
+                  </div>
+                </div>
+                <p className="mt-1 line-clamp-2 text-xs text-muted-foreground">
+                  {m.description || "-"}
+                </p>
+                <div className="mt-2 flex items-center justify-between">
+                  <label className="flex cursor-pointer items-center gap-2 text-xs">
+                    <Switch
+                      checked={m.is_available}
+                      onCheckedChange={() => toggleAvailable(m)}
+                    />
+                    {m.is_available ? "Tersedia" : "Habis"}
+                  </label>
+                  <div className="flex gap-1">
+                    <Button size="sm" variant="ghost" onClick={() => openEdit(m)}>
+                      <Pencil className="h-3.5 w-3.5" />
+                    </Button>
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <Button size="sm" variant="ghost" className="text-destructive">
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>Hapus menu ini?</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            "{m.name}" akan dihapus permanen dari katalog.
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>Batal</AlertDialogCancel>
+                          <AlertDialogAction
+                            onClick={() => remove(m.id)}
+                            className="bg-destructive text-destructive-foreground"
+                          >
+                            Hapus
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
+                  </div>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>{editing ? "Edit Menu" : "Tambah Menu Baru"}</DialogTitle>
+            <DialogDescription>
+              Isi detail menu yang akan ditampilkan di katalog.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="grid gap-3">
+            <div>
+              <Label>Nama Menu</Label>
+              <Input
+                value={form.name}
+                onChange={(e) => setForm({ ...form, name: e.target.value })}
+                placeholder="Contoh: Geprek Original"
+              />
+            </div>
+            <div>
+              <Label>Deskripsi</Label>
+              <Textarea
+                value={form.description ?? ""}
+                onChange={(e) => setForm({ ...form, description: e.target.value })}
+                placeholder="Deskripsi singkat menu"
+                rows={2}
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <Label>Harga (Rp)</Label>
+                <Input
+                  type="number"
+                  min={0}
+                  value={form.price}
+                  onChange={(e) =>
+                    setForm({ ...form, price: Number(e.target.value) || 0 })
+                  }
+                />
+              </div>
+              <div>
+                <Label>Kategori</Label>
+                <Select
+                  value={form.category}
+                  onValueChange={(v) =>
+                    setForm({ ...form, category: v as "paket" | "satuan" })
+                  }
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="satuan">Satuan</SelectItem>
+                    <SelectItem value="paket">Paket Catering</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            <div>
+              <Label>Minimum Porsi</Label>
+              <Input
+                type="number"
+                min={1}
+                value={form.min_portion}
+                onChange={(e) =>
+                  setForm({ ...form, min_portion: Number(e.target.value) || 1 })
+                }
+              />
+            </div>
+            <div>
+              <Label>Gambar Menu</Label>
+              <div className="flex items-center gap-3">
+                {form.image_url && (
+                  <img
+                    src={form.image_url}
+                    alt="preview"
+                    className="h-16 w-16 rounded-md object-cover"
+                  />
+                )}
+                <Input
+                  type="file"
+                  accept="image/*"
+                  disabled={uploading}
+                  onChange={(e) => {
+                    const f = e.target.files?.[0];
+                    if (f) handleUpload(f);
+                  }}
+                />
+              </div>
+              {uploading && (
+                <p className="mt-1 text-xs text-muted-foreground">Mengunggah...</p>
+              )}
+            </div>
+            <label className="flex items-center gap-2">
+              <Switch
+                checked={form.is_available}
+                onCheckedChange={(v) => setForm({ ...form, is_available: v })}
+              />
+              <span className="text-sm">Tersedia untuk dipesan</span>
+            </label>
+          </div>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setOpen(false)}>
+              Batal
+            </Button>
+            <Button
+              onClick={save}
+              className="bg-gradient-warm text-primary-foreground shadow-warm"
+            >
+              {editing ? "Simpan Perubahan" : "Tambah Menu"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </Card>
+  );
+}
