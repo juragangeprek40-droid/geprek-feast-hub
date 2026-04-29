@@ -84,7 +84,7 @@ interface MenuRow {
   name: string;
   description: string | null;
   price: number;
-  category: "paket" | "satuan";
+  category: "paket" | "satuan" | "minuman";
   image_url: string | null;
   is_available: boolean;
   min_portion: number;
@@ -637,7 +637,7 @@ function MenusTab() {
                 <Select
                   value={form.category}
                   onValueChange={(v) =>
-                    setForm({ ...form, category: v as "paket" | "satuan" })
+                    setForm({ ...form, category: v as "paket" | "satuan" | "minuman" })
                   }
                 >
                   <SelectTrigger>
@@ -646,6 +646,7 @@ function MenusTab() {
                   <SelectContent>
                     <SelectItem value="satuan">Satuan</SelectItem>
                     <SelectItem value="paket">Paket Catering</SelectItem>
+                    <SelectItem value="minuman">Minuman</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
