@@ -32,7 +32,7 @@ interface Menu {
   name: string;
   description: string | null;
   price: number;
-  category: "paket" | "satuan";
+  category: "paket" | "satuan" | "minuman";
   image_url: string | null;
   is_available: boolean;
   min_portion: number;
@@ -56,6 +56,7 @@ function MenuPage() {
 
   const paket = menus.filter((m) => m.category === "paket");
   const satuan = menus.filter((m) => m.category === "satuan");
+  const minuman = menus.filter((m) => m.category === "minuman");
 
   return (
     <div className="container mx-auto px-4 py-10">
@@ -65,9 +66,10 @@ function MenuPage() {
       </div>
 
       <Tabs defaultValue="paket" className="w-full">
-        <TabsList className="mx-auto grid w-full max-w-md grid-cols-2 bg-secondary">
+        <TabsList className="mx-auto grid w-full max-w-xl grid-cols-3 bg-secondary">
           <TabsTrigger value="paket">Paket Catering</TabsTrigger>
           <TabsTrigger value="satuan">Per Porsi</TabsTrigger>
+          <TabsTrigger value="minuman">Minuman</TabsTrigger>
         </TabsList>
 
         {loading ? (
@@ -79,6 +81,9 @@ function MenuPage() {
             </TabsContent>
             <TabsContent value="satuan" className="mt-8">
               <Grid items={satuan} />
+            </TabsContent>
+            <TabsContent value="minuman" className="mt-8">
+              <Grid items={minuman} />
             </TabsContent>
           </>
         )}

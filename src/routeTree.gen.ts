@@ -13,6 +13,7 @@ import { Route as SuperAdminRouteImport } from './routes/super-admin'
 import { Route as OrdersRouteImport } from './routes/orders'
 import { Route as MenuRouteImport } from './routes/menu'
 import { Route as KurirRouteImport } from './routes/kurir'
+import { Route as FeedbackRouteImport } from './routes/feedback'
 import { Route as CheckoutRouteImport } from './routes/checkout'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AdminRouteImport } from './routes/admin'
@@ -36,6 +37,11 @@ const MenuRoute = MenuRouteImport.update({
 const KurirRoute = KurirRouteImport.update({
   id: '/kurir',
   path: '/kurir',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const FeedbackRoute = FeedbackRouteImport.update({
+  id: '/feedback',
+  path: '/feedback',
   getParentRoute: () => rootRouteImport,
 } as any)
 const CheckoutRoute = CheckoutRouteImport.update({
@@ -64,6 +70,7 @@ export interface FileRoutesByFullPath {
   '/admin': typeof AdminRoute
   '/auth': typeof AuthRoute
   '/checkout': typeof CheckoutRoute
+  '/feedback': typeof FeedbackRoute
   '/kurir': typeof KurirRoute
   '/menu': typeof MenuRoute
   '/orders': typeof OrdersRoute
@@ -74,6 +81,7 @@ export interface FileRoutesByTo {
   '/admin': typeof AdminRoute
   '/auth': typeof AuthRoute
   '/checkout': typeof CheckoutRoute
+  '/feedback': typeof FeedbackRoute
   '/kurir': typeof KurirRoute
   '/menu': typeof MenuRoute
   '/orders': typeof OrdersRoute
@@ -85,6 +93,7 @@ export interface FileRoutesById {
   '/admin': typeof AdminRoute
   '/auth': typeof AuthRoute
   '/checkout': typeof CheckoutRoute
+  '/feedback': typeof FeedbackRoute
   '/kurir': typeof KurirRoute
   '/menu': typeof MenuRoute
   '/orders': typeof OrdersRoute
@@ -97,6 +106,7 @@ export interface FileRouteTypes {
     | '/admin'
     | '/auth'
     | '/checkout'
+    | '/feedback'
     | '/kurir'
     | '/menu'
     | '/orders'
@@ -107,6 +117,7 @@ export interface FileRouteTypes {
     | '/admin'
     | '/auth'
     | '/checkout'
+    | '/feedback'
     | '/kurir'
     | '/menu'
     | '/orders'
@@ -117,6 +128,7 @@ export interface FileRouteTypes {
     | '/admin'
     | '/auth'
     | '/checkout'
+    | '/feedback'
     | '/kurir'
     | '/menu'
     | '/orders'
@@ -128,6 +140,7 @@ export interface RootRouteChildren {
   AdminRoute: typeof AdminRoute
   AuthRoute: typeof AuthRoute
   CheckoutRoute: typeof CheckoutRoute
+  FeedbackRoute: typeof FeedbackRoute
   KurirRoute: typeof KurirRoute
   MenuRoute: typeof MenuRoute
   OrdersRoute: typeof OrdersRoute
@@ -162,6 +175,13 @@ declare module '@tanstack/react-router' {
       path: '/kurir'
       fullPath: '/kurir'
       preLoaderRoute: typeof KurirRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/feedback': {
+      id: '/feedback'
+      path: '/feedback'
+      fullPath: '/feedback'
+      preLoaderRoute: typeof FeedbackRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/checkout': {
@@ -200,6 +220,7 @@ const rootRouteChildren: RootRouteChildren = {
   AdminRoute: AdminRoute,
   AuthRoute: AuthRoute,
   CheckoutRoute: CheckoutRoute,
+  FeedbackRoute: FeedbackRoute,
   KurirRoute: KurirRoute,
   MenuRoute: MenuRoute,
   OrdersRoute: OrdersRoute,

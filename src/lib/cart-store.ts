@@ -6,7 +6,7 @@ export interface CartItem {
   menuId: string;
   name: string;
   price: number;
-  category: "paket" | "satuan";
+  category: "paket" | "satuan" | "minuman";
   quantity: number;
   spiceLevel: SpiceLevel;
   extras: string;
