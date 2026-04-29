@@ -1076,3 +1076,113 @@ function SettingsTab({ userId }: { userId: string }) {
     </div>
   );
 }
+
+/* ---------------- FEEDBACK TAB ---------------- */
+
+interface FeedbackRow {
+  id: string;
+  name: string;
+  email: string | null;
+  rating: number;
+  message: string;
+  created_at: string;
+  user_id: string | null;
+}
+
+function FeedbackTab() {
+  const [items, setItems] = useState<FeedbackRow[]>([]);
+  const [busy, setBusy] = useState(true);
+
+  async function load() {
+    setBusy(true);
+    const { data, error } = await supabase
+      .from("feedback")
+      .select("*")
+      .order("created_at", { ascending: false });
+    if (error) toast.error(error.message);
+    setItems((data ?? []) as FeedbackRow[]);
+    setBusy(false);
+  }
+
+  useEffect(() => {
+    load();
+  }, []);
+
+  async function remove(id: string) {
+    const { error } = await supabase.from("feedback").delete().eq("id", id);
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
+    toast.success("Feedback dihapus");
+    load();
+  }
+
+  const avg = items.length
+    ? (items.reduce((s, i) => s + i.rating, 0) / items.length).toFixed(1)
+    : "—";
+
+  if (busy) return <div className="py-10 text-center text-muted-foreground">Memuat...</div>;
+
+  return (
+    <div className="space-y-4">
+      <Card className="p-4 flex items-center justify-between">
+        <div>
+          <div className="text-sm text-muted-foreground">Total Masukan</div>
+          <div className="font-display text-2xl font-bold">{items.length}</div>
+        </div>
+        <div className="text-right">
+          <div className="text-sm text-muted-foreground">Rata-rata Rating</div>
+          <div className="flex items-center gap-1 justify-end font-display text-2xl font-bold">
+            <Star className="h-5 w-5 fill-primary text-primary" />
+            {avg}
+          </div>
+        </div>
+      </Card>
+
+      {items.length === 0 ? (
+        <Card className="p-10 text-center text-muted-foreground">Belum ada masukan.</Card>
+      ) : (
+        items.map((f) => (
+          <Card key={f.id} className="p-4">
+            <div className="flex items-start justify-between gap-3">
+              <div className="flex-1">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className="font-semibold">{f.name}</span>
+                  {f.email && <span className="text-xs text-muted-foreground">· {f.email}</span>}
+                  <div className="flex items-center gap-0.5">
+                    {[1, 2, 3, 4, 5].map((n) => (
+                      <Star key={n} className={`h-3.5 w-3.5 ${n <= f.rating ? "fill-primary text-primary" : "text-muted-foreground/30"}`} />
+                    ))}
+                  </div>
+                </div>
+                <p className="mt-2 text-sm whitespace-pre-wrap">{f.message}</p>
+                <div className="mt-2 text-xs text-muted-foreground">
+                  {new Date(f.created_at).toLocaleString("id-ID")}
+                </div>
+              </div>
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button variant="ghost" size="icon" className="text-destructive">
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Hapus feedback ini?</AlertDialogTitle>
+                    <AlertDialogDescription>Tindakan ini tidak dapat dibatalkan.</AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Batal</AlertDialogCancel>
+                    <AlertDialogAction onClick={() => remove(f.id)}>Hapus</AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+            </div>
+          </Card>
+        ))
+      )}
+    </div>
+  );
+}
+
