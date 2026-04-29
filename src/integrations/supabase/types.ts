@@ -50,6 +50,36 @@ export type Database = {
         }
         Relationships: []
       }
+      feedback: {
+        Row: {
+          created_at: string
+          email: string | null
+          id: string
+          message: string
+          name: string
+          rating: number
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          email?: string | null
+          id?: string
+          message: string
+          name: string
+          rating: number
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          email?: string | null
+          id?: string
+          message?: string
+          name?: string
+          rating?: number
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       menus: {
         Row: {
           category: Database["public"]["Enums"]["menu_category"]
@@ -299,7 +329,7 @@ export type Database = {
     }
     Enums: {
       app_role: "admin" | "kurir" | "pelanggan"
-      menu_category: "paket" | "satuan"
+      menu_category: "paket" | "satuan" | "minuman"
       order_status:
         | "pending"
         | "dibayar"
@@ -437,7 +467,7 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["admin", "kurir", "pelanggan"],
-      menu_category: ["paket", "satuan"],
+      menu_category: ["paket", "satuan", "minuman"],
       order_status: [
         "pending",
         "dibayar",
