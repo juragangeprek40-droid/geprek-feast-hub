@@ -55,6 +55,8 @@ import {
   Tag,
   Settings as SettingsIcon,
   Save,
+  MessageSquareHeart,
+  Star,
 } from "lucide-react";
 import {
   fetchSiteSettings,
@@ -146,6 +148,9 @@ function SuperAdminPage() {
           <TabsTrigger value="settings" className="gap-2">
             <SettingsIcon className="h-4 w-4" /> Pengaturan Website
           </TabsTrigger>
+          <TabsTrigger value="feedback" className="gap-2">
+            <MessageSquareHeart className="h-4 w-4" /> Kritik & Saran
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="users" className="mt-6">
@@ -159,6 +164,9 @@ function SuperAdminPage() {
         </TabsContent>
         <TabsContent value="settings" className="mt-6">
           <SettingsTab userId={user.id} />
+        </TabsContent>
+        <TabsContent value="feedback" className="mt-6">
+          <FeedbackTab />
         </TabsContent>
       </Tabs>
     </div>
