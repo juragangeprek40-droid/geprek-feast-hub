@@ -42,6 +42,9 @@ export function Navbar() {
               Pesanan Saya
             </Link>
           )}
+          <Link to="/feedback" className="px-3 py-2 text-sm font-medium text-foreground/80 hover:text-primary" activeProps={{ className: "text-primary" }}>
+            Kritik & Saran
+          </Link>
         </nav>
 
         <div className="flex items-center gap-2">
