@@ -189,7 +189,7 @@ function KurirPage() {
       </div>
 
       <Tabs defaultValue="today" className="mt-8">
-        <TabsList className="bg-secondary">
+        <TabsList className="flex h-auto w-full flex-wrap justify-start gap-1 bg-secondary">
           <TabsTrigger value="today">
             Hari Ini <Badge className="ml-2">{todayList.length}</Badge>
           </TabsTrigger>
