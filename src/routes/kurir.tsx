@@ -189,7 +189,7 @@ function KurirPage() {
       </div>
 
       <Tabs defaultValue="today" className="mt-8">
-        <TabsList className="bg-secondary">
+        <TabsList className="flex h-auto w-full flex-wrap justify-start gap-1 bg-secondary">
           <TabsTrigger value="today">
             Hari Ini <Badge className="ml-2">{todayList.length}</Badge>
           </TabsTrigger>
@@ -315,7 +315,7 @@ function DeliveryCard({
             )}
           </div>
         </div>
-        <div className="text-right space-y-2 min-w-[180px]">
+        <div className="w-full space-y-2 text-right sm:w-auto sm:min-w-[180px]">
           <div className="font-display text-lg font-bold text-primary">{formatRupiah(o.total)}</div>
           <Select value={o.status} onValueChange={(v) => onUpdate(o.id, v)}>
             <SelectTrigger className="h-8 text-xs">

@@ -135,21 +135,21 @@ function SuperAdminPage() {
       </div>
 
       <Tabs defaultValue="users" className="mt-8">
-        <TabsList className="bg-secondary">
+        <TabsList className="flex h-auto w-full flex-wrap justify-start gap-1 bg-secondary">
           <TabsTrigger value="users" className="gap-2">
-            <Users className="h-4 w-4" /> Pengguna & Role
+            <Users className="h-4 w-4" /> <span className="hidden sm:inline">Pengguna & Role</span><span className="sm:hidden">Pengguna</span>
           </TabsTrigger>
           <TabsTrigger value="menus" className="gap-2">
-            <UtensilsCrossed className="h-4 w-4" /> Kelola Menu
+            <UtensilsCrossed className="h-4 w-4" /> <span className="hidden sm:inline">Kelola Menu</span><span className="sm:hidden">Menu</span>
           </TabsTrigger>
           <TabsTrigger value="audit" className="gap-2">
-            <History className="h-4 w-4" /> Audit Log
+            <History className="h-4 w-4" /> <span className="hidden sm:inline">Audit Log</span><span className="sm:hidden">Audit</span>
           </TabsTrigger>
           <TabsTrigger value="settings" className="gap-2">
-            <SettingsIcon className="h-4 w-4" /> Pengaturan Website
+            <SettingsIcon className="h-4 w-4" /> <span className="hidden sm:inline">Pengaturan Website</span><span className="sm:hidden">Pengaturan</span>
           </TabsTrigger>
           <TabsTrigger value="feedback" className="gap-2">
-            <MessageSquareHeart className="h-4 w-4" /> Kritik & Saran
+            <MessageSquareHeart className="h-4 w-4" /> <span className="hidden sm:inline">Kritik & Saran</span><span className="sm:hidden">Saran</span>
           </TabsTrigger>
         </TabsList>
 

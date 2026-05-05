@@ -44,7 +44,7 @@ function HomePage() {
                 </Button>
               </Link>
             </div>
-            <div className="flex gap-6 pt-2 text-sm text-muted-foreground">
+            <div className="flex flex-wrap gap-x-6 gap-y-3 pt-2 text-sm text-muted-foreground">
               <div><div className="font-display text-2xl font-bold text-foreground">10K+</div>porsi terkirim</div>
               <div><div className="font-display text-2xl font-bold text-foreground">500+</div>acara sukses</div>
               <div><div className="font-display text-2xl font-bold text-foreground">4.9★</div>rating pelanggan</div>
