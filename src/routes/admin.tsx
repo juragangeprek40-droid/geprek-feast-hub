@@ -165,7 +165,7 @@ function OrderCard({ order: o, couriers, onStatus, onAssign }: { order: OrderFul
           </div>
         </div>
 
-        <div className="text-right space-y-2 min-w-[200px]">
+        <div className="w-full space-y-2 text-right sm:w-auto sm:min-w-[200px]">
           <div className="font-display text-xl font-bold text-primary">{formatRupiah(o.total)}</div>
           {o.payment_proof_url && (
             <a href={o.payment_proof_url} target="_blank" rel="noopener noreferrer" className="text-xs text-primary inline-flex items-center gap-1 hover:underline">

@@ -315,7 +315,7 @@ function DeliveryCard({
             )}
           </div>
         </div>
-        <div className="text-right space-y-2 min-w-[180px]">
+        <div className="w-full space-y-2 text-right sm:w-auto sm:min-w-[180px]">
           <div className="font-display text-lg font-bold text-primary">{formatRupiah(o.total)}</div>
           <Select value={o.status} onValueChange={(v) => onUpdate(o.id, v)}>
             <SelectTrigger className="h-8 text-xs">
