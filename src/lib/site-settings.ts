@@ -23,6 +23,7 @@ export interface HeroSettings {
   headline: string;
   subheadline: string;
   cta_text: string;
+  image_url: string;
 }
 
 export interface SiteSettings {
