@@ -914,6 +914,79 @@ function formatDetails(action: string, details: any): string {
   return "";
 }
 
+/* ---------------- HERO IMAGE EDITOR ---------------- */
+
+function HeroImageEditor({ value, onChange }: { value: string; onChange: (url: string) => void }) {
+  const [uploading, setUploading] = useState(false);
+
+  async function handleUpload(file: File) {
+    const v = validateImageFile(file);
+    if (!v.valid) return toast.error(v.error!);
+    setUploading(true);
+    const ext = file.name.split(".").pop();
+    const path = `hero/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
+    const { error } = await supabase.storage
+      .from("menu-images")
+      .upload(path, file, { upsert: false, contentType: file.type });
+    if (error) {
+      setUploading(false);
+      return toast.error(error.message);
+    }
+    const { data } = supabase.storage.from("menu-images").getPublicUrl(path);
+    onChange(data.publicUrl);
+    setUploading(false);
+    toast.success("Gambar hero diunggah");
+  }
+
+  return (
+    <div className="space-y-2">
+      <Label>Gambar Hero (Halaman Utama)</Label>
+      {value ? (
+        <div className="relative w-full max-w-md">
+          <img
+            src={value}
+            alt="Preview hero"
+            className="w-full rounded-lg border border-border/60 aspect-[3/2] object-cover"
+          />
+          <Button
+            type="button"
+            variant="destructive"
+            size="sm"
+            className="absolute top-2 right-2"
+            onClick={() => onChange("")}
+          >
+            <Trash2 className="h-3.5 w-3.5" />
+          </Button>
+        </div>
+      ) : (
+        <p className="text-xs text-muted-foreground">Belum ada gambar — gambar default akan digunakan.</p>
+      )}
+      <div className="flex flex-wrap gap-2 items-center">
+        <Input
+          type="file"
+          accept={ALLOWED_IMAGE_EXTENSIONS.map((e) => `.${e}`).join(",")}
+          onChange={(e) => {
+            const f = e.target.files?.[0];
+            if (f) handleUpload(f);
+            e.target.value = "";
+          }}
+          disabled={uploading}
+          className="max-w-xs"
+        />
+        {uploading && <span className="text-xs text-muted-foreground">Mengunggah...</span>}
+      </div>
+      <Input
+        placeholder="Atau tempel URL gambar"
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+      />
+      <p className="text-[11px] text-muted-foreground">
+        Format: {ALLOWED_IMAGE_EXTENSIONS.join(", ").toUpperCase()} · maks {MAX_IMAGE_SIZE_MB} MB · rasio 3:2 disarankan.
+      </p>
+    </div>
+  );
+}
+
 /* ---------------- SETTINGS TAB ---------------- */
 
 function SettingsTab({ userId }: { userId: string }) {
