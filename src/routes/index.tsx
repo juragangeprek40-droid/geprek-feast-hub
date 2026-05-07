@@ -17,6 +17,8 @@ export const Route = createFileRoute("/")({
 });
 
 function HomePage() {
+  const { settings } = useSiteSettings();
+  const heroSrc = settings.hero.image_url?.trim() || heroImg;
   return (
     <div>
       {/* HERO */}
