@@ -2,6 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { Flame, Truck, CalendarCheck, Sparkles, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import heroImg from "@/assets/hero-geprek.jpg";
+import { useSiteSettings } from "@/lib/site-settings";
 
 export const Route = createFileRoute("/")({
   head: () => ({
