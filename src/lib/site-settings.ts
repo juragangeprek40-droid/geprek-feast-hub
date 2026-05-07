@@ -24,6 +24,9 @@ export interface HeroSettings {
   subheadline: string;
   cta_text: string;
   image_url: string;
+  price_label: string;
+  price_value: string;
+  price_unit: string;
 }
 
 export interface SiteSettings {
@@ -57,6 +60,9 @@ export const DEFAULT_SETTINGS: SiteSettings = {
     subheadline: "Bumbu meresap, sambal nampar, porsi puas untuk hajatan & keluarga.",
     cta_text: "Pesan Sekarang",
     image_url: "",
+    price_label: "Mulai dari",
+    price_value: "Rp 18.000",
+    price_unit: "/porsi",
   },
 };
 

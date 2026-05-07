@@ -1082,6 +1082,20 @@ function SettingsTab({ userId }: { userId: string }) {
             value={settings.hero.image_url}
             onChange={(url) => update("hero", { image_url: url })}
           />
+          <div className="grid gap-3 sm:grid-cols-3">
+            <div>
+              <Label>Label Harga</Label>
+              <Input value={settings.hero.price_label} onChange={(e) => update("hero", { price_label: e.target.value })} placeholder="Mulai dari" />
+            </div>
+            <div>
+              <Label>Harga</Label>
+              <Input value={settings.hero.price_value} onChange={(e) => update("hero", { price_value: e.target.value })} placeholder="Rp 18.000" />
+            </div>
+            <div>
+              <Label>Satuan</Label>
+              <Input value={settings.hero.price_unit} onChange={(e) => update("hero", { price_unit: e.target.value })} placeholder="/porsi" />
+            </div>
+          </div>
         </div>
       </Card>
 

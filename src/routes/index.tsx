@@ -60,8 +60,8 @@ function HomePage() {
               <div className="flex items-center gap-3">
                 <div className="flex h-10 w-10 items-center justify-center rounded-full bg-spice/15"><Flame className="h-5 w-5 text-spice" /></div>
                 <div>
-                  <div className="text-xs text-muted-foreground">Mulai dari</div>
-                  <div className="font-display text-lg font-bold">Rp 18.000<span className="text-sm font-normal text-muted-foreground">/porsi</span></div>
+                  <div className="text-xs text-muted-foreground">{settings.hero.price_label || "Mulai dari"}</div>
+                  <div className="font-display text-lg font-bold">{settings.hero.price_value || "Rp 18.000"}<span className="text-sm font-normal text-muted-foreground">{settings.hero.price_unit || "/porsi"}</span></div>
                 </div>
               </div>
             </div>
