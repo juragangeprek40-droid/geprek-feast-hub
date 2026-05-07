@@ -24,6 +24,9 @@ export interface HeroSettings {
   subheadline: string;
   cta_text: string;
   image_url: string;
+  price_label: string;
+  price_value: string;
+  price_unit: string;
 }
 
 export interface SiteSettings {
