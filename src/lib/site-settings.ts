@@ -56,6 +56,7 @@ export const DEFAULT_SETTINGS: SiteSettings = {
     headline: "Catering Ayam Geprek Otentik untuk Acaramu",
     subheadline: "Bumbu meresap, sambal nampar, porsi puas untuk hajatan & keluarga.",
     cta_text: "Pesan Sekarang",
+    image_url: "",
   },
 };
 
