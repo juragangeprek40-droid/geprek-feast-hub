@@ -1005,6 +1005,10 @@ function SettingsTab({ userId }: { userId: string }) {
             <Label>Teks Tombol CTA</Label>
             <Input value={settings.hero.cta_text} onChange={(e) => update("hero", { cta_text: e.target.value })} />
           </div>
+          <HeroImageEditor
+            value={settings.hero.image_url}
+            onChange={(url) => update("hero", { image_url: url })}
+          />
         </div>
       </Card>
 
