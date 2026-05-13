@@ -193,8 +193,9 @@ function CheckoutPage() {
 
           <div className="mt-5 rounded-lg bg-secondary p-3 text-xs">
             <div className="font-semibold mb-1">Transfer ke:</div>
-            <div>BCA <span className="font-mono">1234567890</span></div>
-            <div>a.n. Juragan Geprek</div>
+            <div>{settings.payment.bank_name} <span className="font-mono">{settings.payment.account_number}</span></div>
+            <div>a.n. {settings.payment.account_holder}</div>
+            {settings.payment.instructions && <div className="mt-2 text-muted-foreground">{settings.payment.instructions}</div>}
           </div>
 
           <div className="mt-4">
