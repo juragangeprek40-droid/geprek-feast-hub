@@ -122,7 +122,7 @@ function MenuCard({ menu }: { menu: Menu }) {
       price: unitPrice,
       category: menu.category,
       quantity: qty,
-      spiceLevel: spice,
+      spiceLevel: menu.category === "minuman" ? "tidak_pedas" : spice,
       extras,
       minPortion: menu.min_portion,
     });
@@ -183,18 +183,20 @@ function MenuCard({ menu }: { menu: Menu }) {
                   <Label>Jumlah porsi (min. {menu.min_portion})</Label>
                   <Input type="number" min={menu.min_portion} value={qty} onChange={(e) => setQty(Math.max(menu.min_portion, Number(e.target.value)))} />
                 </div>
-                <div>
-                  <Label className="flex items-center gap-1"><Flame className="h-3.5 w-3.5 text-spice" />Level Pedas</Label>
-                  <Select value={spice} onValueChange={(v) => setSpice(v as SpiceLevel)}>
-                    <SelectTrigger><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="tidak_pedas">Tidak Pedas</SelectItem>
-                      <SelectItem value="sedang">Sedang 🌶</SelectItem>
-                      <SelectItem value="pedas">Pedas 🌶🌶</SelectItem>
-                      <SelectItem value="extra_pedas">Extra Pedas 🌶🌶🌶</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
+                {menu.category !== "minuman" && (
+                  <div>
+                    <Label className="flex items-center gap-1"><Flame className="h-3.5 w-3.5 text-spice" />Level Pedas</Label>
+                    <Select value={spice} onValueChange={(v) => setSpice(v as SpiceLevel)}>
+                      <SelectTrigger><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="tidak_pedas">Tidak Pedas</SelectItem>
+                        <SelectItem value="sedang">Sedang 🌶</SelectItem>
+                        <SelectItem value="pedas">Pedas 🌶🌶</SelectItem>
+                        <SelectItem value="extra_pedas">Extra Pedas 🌶🌶🌶</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                )}
                 <div>
                   <Label>Tambahan / Catatan (opsional)</Label>
                   <Textarea placeholder="Contoh: tambah keju, tanpa lalapan..." value={extras} onChange={(e) => setExtras(e.target.value)} maxLength={300} />
