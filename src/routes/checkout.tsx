@@ -3,6 +3,7 @@ import { useState } from "react";
 import { z } from "zod";
 import { useCart, cartStore, cartTotal, formatRupiah } from "@/lib/cart-store";
 import { useAuth } from "@/lib/auth";
+import { useSiteSettings } from "@/lib/site-settings";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -34,6 +35,7 @@ const orderSchema = z.object({
 function CheckoutPage() {
   const cart = useCart();
   const { user } = useAuth();
+  const { settings } = useSiteSettings();
   const navigate = useNavigate();
   const [submitting, setSubmitting] = useState(false);
   const [proofFile, setProofFile] = useState<File | null>(null);
@@ -191,8 +193,9 @@ function CheckoutPage() {
 
           <div className="mt-5 rounded-lg bg-secondary p-3 text-xs">
             <div className="font-semibold mb-1">Transfer ke:</div>
-            <div>BCA <span className="font-mono">1234567890</span></div>
-            <div>a.n. Juragan Geprek</div>
+            <div>{settings.payment.bank_name} <span className="font-mono">{settings.payment.account_number}</span></div>
+            <div>a.n. {settings.payment.account_holder}</div>
+            {settings.payment.instructions && <div className="mt-2 text-muted-foreground">{settings.payment.instructions}</div>}
           </div>
 
           <div className="mt-4">
