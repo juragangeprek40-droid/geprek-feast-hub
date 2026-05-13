@@ -122,7 +122,7 @@ function MenuCard({ menu }: { menu: Menu }) {
       price: unitPrice,
       category: menu.category,
       quantity: qty,
-      spiceLevel: spice,
+      spiceLevel: menu.category === "minuman" ? "tidak_pedas" : spice,
       extras,
       minPortion: menu.min_portion,
     });
