@@ -3,6 +3,7 @@ import { useState } from "react";
 import { z } from "zod";
 import { useCart, cartStore, cartTotal, formatRupiah } from "@/lib/cart-store";
 import { useAuth } from "@/lib/auth";
+import { useSiteSettings } from "@/lib/site-settings";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
