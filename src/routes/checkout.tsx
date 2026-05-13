@@ -144,7 +144,9 @@ function CheckoutPage() {
                   <div className="flex flex-wrap items-center gap-2">
                     <h3 className="font-semibold">{item.name}</h3>
                     <Badge variant="secondary" className="capitalize">{item.category}</Badge>
-                    <Badge variant="outline" className="border-spice/50 text-spice"><Flame className="mr-1 h-3 w-3" />{spiceLabel[item.spiceLevel]}</Badge>
+                    {item.category !== "minuman" && (
+                      <Badge variant="outline" className="border-spice/50 text-spice"><Flame className="mr-1 h-3 w-3" />{spiceLabel[item.spiceLevel]}</Badge>
+                    )}
                   </div>
                   {item.extras && <p className="mt-1 text-xs text-muted-foreground">Catatan: {item.extras}</p>}
                   <div className="mt-3 flex items-center gap-2">
