@@ -35,6 +35,7 @@ const orderSchema = z.object({
 function CheckoutPage() {
   const cart = useCart();
   const { user } = useAuth();
+  const { settings } = useSiteSettings();
   const navigate = useNavigate();
   const [submitting, setSubmitting] = useState(false);
   const [proofFile, setProofFile] = useState<File | null>(null);
