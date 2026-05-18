@@ -21,7 +21,27 @@ export const Route = createFileRoute("/menu")({
   head: () => ({
     meta: [
       { title: "Menu Catering — Juragan Geprek" },
-      { name: "description", content: "Pilih menu paket catering atau satuan ayam geprek. Harga mulai Rp 18.000 per porsi." },
+      { name: "description", content: "Pilih menu paket catering atau satuan ayam geprek. Harga mulai Rp 18.000 per porsi dengan 4 level pedas." },
+      { property: "og:title", content: "Menu Catering Ayam Geprek — Juragan Geprek" },
+      { property: "og:description", content: "Paket porsi banyak & satuan dengan bumbu khas. Mulai Rp 18.000 per porsi." },
+      { property: "og:url", content: "https://geprek-feast-hub.lovable.app/menu" },
+      { property: "og:type", content: "website" },
+    ],
+    links: [
+      { rel: "canonical", href: "https://geprek-feast-hub.lovable.app/menu" },
+    ],
+    scripts: [
+      {
+        type: "application/ld+json",
+        children: JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "Menu",
+          name: "Menu Catering Juragan Geprek",
+          url: "https://geprek-feast-hub.lovable.app/menu",
+          inLanguage: "id-ID",
+          provider: { "@type": "FoodEstablishment", name: "Juragan Geprek" },
+        }),
+      },
     ],
   }),
   component: MenuPage,
@@ -144,7 +164,7 @@ function MenuCard({ menu }: { menu: Menu }) {
       </div>
       <div className="p-4 space-y-2">
         <div className="flex items-start justify-between gap-2">
-          <h3 className="font-display text-lg font-bold leading-tight">{menu.name}</h3>
+          <h2 className="font-display text-lg font-bold leading-tight">{menu.name}</h2>
           <Badge variant="secondary" className="shrink-0 capitalize">{menu.category}</Badge>
         </div>
         <p className="text-sm text-muted-foreground line-clamp-2 min-h-[2.5rem]">{menu.description}</p>

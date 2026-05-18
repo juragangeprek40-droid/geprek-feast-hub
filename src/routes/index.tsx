@@ -76,7 +76,7 @@ function HomePage() {
           </div>
           <div className="relative">
             <div className="absolute -inset-4 rounded-3xl bg-gradient-warm/20 blur-2xl" />
-            <img src={heroSrc} alt="Ayam geprek dengan sambal merah dan nasi hangat di atas daun pisang" width={1536} height={1024} className="relative rounded-3xl shadow-warm ring-1 ring-border/40 aspect-[3/2] object-cover" />
+            <img src={heroSrc} alt="Ayam geprek dengan sambal merah dan nasi hangat di atas daun pisang" width={1536} height={1024} fetchPriority="high" decoding="async" className="relative rounded-3xl shadow-warm ring-1 ring-border/40 aspect-[3/2] object-cover" />
             <div className="absolute -bottom-5 -left-5 rounded-2xl bg-card p-4 shadow-warm ring-1 ring-border md:left-4">
               <div className="flex items-center gap-3">
                 <div className="flex h-10 w-10 items-center justify-center rounded-full bg-spice/15"><Flame className="h-5 w-5 text-spice" /></div>
