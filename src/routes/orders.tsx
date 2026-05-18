@@ -9,7 +9,19 @@ import { formatRupiah } from "@/lib/cart-store";
 import { CalendarDays, MapPin, Package } from "lucide-react";
 
 export const Route = createFileRoute("/orders")({
-  head: () => ({ meta: [{ title: "Pesanan Saya — Juragan Geprek" }] }),
+  head: () => ({
+    meta: [
+      { title: "Pesanan Saya — Juragan Geprek" },
+      { name: "description", content: "Lihat riwayat dan pantau status pesanan catering ayam geprekmu di Juragan Geprek." },
+      { property: "og:title", content: "Pesanan Saya — Juragan Geprek" },
+      { property: "og:description", content: "Pantau status pesanan catering ayam geprekmu." },
+      { property: "og:url", content: "https://geprek-feast-hub.lovable.app/orders" },
+      { property: "og:type", content: "website" },
+    ],
+    links: [
+      { rel: "canonical", href: "https://geprek-feast-hub.lovable.app/orders" },
+    ],
+  }),
   component: OrdersPage,
 });
 
