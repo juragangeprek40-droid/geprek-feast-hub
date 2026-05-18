@@ -74,6 +74,9 @@ function AuthPage() {
         <div className="font-display text-xl font-bold">Juragan Geprek</div>
       </Link>
 
+      <h1 className="mb-2 text-center font-display text-2xl font-bold md:text-3xl">Masuk atau Daftar Akun</h1>
+      <p className="mb-6 text-center text-sm text-muted-foreground">Akses pesananmu dan pesan catering lebih cepat.</p>
+
       <Card className="w-full p-6 shadow-warm border-primary/20">
         <Tabs defaultValue="login">
           <TabsList className="grid w-full grid-cols-2 bg-secondary">
