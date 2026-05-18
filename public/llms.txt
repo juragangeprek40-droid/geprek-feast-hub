@@ -1,0 +1,15 @@
+# Juragan Geprek
+
+> E-catering ayam geprek otentik untuk hajatan, arisan, kantor, dan acara keluarga. Pesan paket porsi banyak atau satuan dengan jadwal pengiriman fleksibel.
+
+## Pages
+
+- [Beranda](/): Ringkasan layanan catering ayam geprek dan keunggulan kami.
+- [Menu Catering](/menu): Daftar menu paket dan satuan, level pedas, serta harga.
+- [Checkout](/checkout): Form pemesanan, jadwal pengiriman, dan informasi pembayaran.
+- [Kritik & Saran](/feedback): Kirim masukan dan rating untuk pelayanan kami.
+- [Masuk / Daftar](/auth): Buat akun atau login untuk memantau pesanan.
+
+## Optional
+
+- [Pesanan Saya](/orders): Riwayat dan status pesanan pengguna terdaftar.

@@ -340,8 +340,8 @@ function DeliveryCard({
               </Button>
             </a>
             {o.guest_phone && (
-              <a href={`https://wa.me/${o.guest_phone.replace(/\D/g, "")}`} target="_blank" rel="noopener noreferrer">
-                <Button variant="outline" size="sm">
+              <a href={`https://wa.me/${o.guest_phone.replace(/\D/g, "")}`} target="_blank" rel="noopener noreferrer" aria-label={`Hubungi ${o.guest_name ?? "pelanggan"} via WhatsApp`}>
+                <Button variant="outline" size="sm" aria-label="Hubungi via WhatsApp">
                   <Phone className="h-3.5 w-3.5" />
                 </Button>
               </a>
