@@ -9,8 +9,29 @@ export const Route = createFileRoute("/")({
     meta: [
       { title: "Juragan Geprek — Catering Ayam Geprek Otentik" },
       { name: "description", content: "Pesan catering ayam geprek untuk acara & keluarga. Paket porsi banyak, satuan, jadwal fleksibel, dan bumbu khas Juragan Geprek." },
-      { property: "og:title", content: "Juragan Geprek — E-Catering" },
-      { property: "og:description", content: "Catering ayam geprek otentik untuk segala acara." },
+      { property: "og:title", content: "Juragan Geprek — E-Catering Ayam Geprek" },
+      { property: "og:description", content: "Catering ayam geprek otentik untuk hajatan, arisan, kantor, dan keluarga." },
+      { property: "og:url", content: "https://geprek-feast-hub.lovable.app/" },
+      { property: "og:type", content: "website" },
+    ],
+    links: [
+      { rel: "canonical", href: "https://geprek-feast-hub.lovable.app/" },
+    ],
+    scripts: [
+      {
+        type: "application/ld+json",
+        children: JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "FoodEstablishment",
+          name: "Juragan Geprek",
+          description: "E-catering ayam geprek otentik untuk acara, hajatan, dan keluarga.",
+          servesCuisine: "Indonesian",
+          url: "https://geprek-feast-hub.lovable.app/",
+          telephone: "+6281234567890",
+          priceRange: "Rp",
+          address: { "@type": "PostalAddress", addressCountry: "ID" },
+        }),
+      },
     ],
   }),
   component: HomePage,
@@ -55,7 +76,7 @@ function HomePage() {
           </div>
           <div className="relative">
             <div className="absolute -inset-4 rounded-3xl bg-gradient-warm/20 blur-2xl" />
-            <img src={heroSrc} alt="Ayam geprek dengan sambal merah dan nasi hangat di atas daun pisang" width={1536} height={1024} className="relative rounded-3xl shadow-warm ring-1 ring-border/40 aspect-[3/2] object-cover" />
+            <img src={heroSrc} alt="Ayam geprek dengan sambal merah dan nasi hangat di atas daun pisang" width={1536} height={1024} fetchPriority="high" decoding="async" className="relative rounded-3xl shadow-warm ring-1 ring-border/40 aspect-[3/2] object-cover" />
             <div className="absolute -bottom-5 -left-5 rounded-2xl bg-card p-4 shadow-warm ring-1 ring-border md:left-4">
               <div className="flex items-center gap-3">
                 <div className="flex h-10 w-10 items-center justify-center rounded-full bg-spice/15"><Flame className="h-5 w-5 text-spice" /></div>
@@ -79,7 +100,7 @@ function HomePage() {
           ].map((f) => (
             <div key={f.title} className="rounded-2xl border border-border/60 bg-card p-6 shadow-soft">
               <div className="mb-3 flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-warm text-primary-foreground"><f.icon className="h-5 w-5" /></div>
-              <h3 className="font-display text-lg font-bold">{f.title}</h3>
+              <h2 className="font-display text-lg font-bold">{f.title}</h2>
               <p className="mt-1 text-sm text-muted-foreground">{f.desc}</p>
             </div>
           ))}

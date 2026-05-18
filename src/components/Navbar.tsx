@@ -51,8 +51,8 @@ export function Navbar() {
         </nav>
 
         <div className="flex items-center gap-1 sm:gap-2">
-          <Link to="/checkout" className="relative">
-            <Button variant="ghost" size="icon" className="text-foreground">
+          <Link to="/checkout" className="relative" aria-label="Keranjang belanja">
+            <Button variant="ghost" size="icon" className="text-foreground" aria-label="Buka keranjang belanja">
               <ShoppingCart className="h-5 w-5" />
               {cart.length > 0 && (
                 <span className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-primary px-1 text-[10px] font-bold text-primary-foreground">
@@ -65,7 +65,7 @@ export function Navbar() {
           {user ? (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="outline" size="icon">
+                <Button variant="outline" size="icon" aria-label="Menu akun pengguna">
                   <User className="h-4 w-4" />
                 </Button>
               </DropdownMenuTrigger>

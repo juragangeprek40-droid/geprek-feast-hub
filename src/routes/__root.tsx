@@ -44,6 +44,28 @@ export const Route = createRootRoute({
       { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
       { rel: "stylesheet", href: "https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&family=Inter:wght@400;500;600&display=swap" },
     ],
+    scripts: [
+      {
+        type: "application/ld+json",
+        children: JSON.stringify({
+          "@context": "https://schema.org",
+          "@graph": [
+            {
+              "@type": "Organization",
+              name: "Juragan Geprek",
+              url: "https://geprek-feast-hub.lovable.app/",
+              logo: "https://geprek-feast-hub.lovable.app/favicon.ico",
+            },
+            {
+              "@type": "WebSite",
+              name: "Juragan Geprek",
+              url: "https://geprek-feast-hub.lovable.app/",
+              inLanguage: "id-ID",
+            },
+          ],
+        }),
+      },
+    ],
   }),
   shellComponent: RootShell,
   component: RootComponent,

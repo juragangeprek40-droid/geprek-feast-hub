@@ -15,7 +15,19 @@ import { Trash2, Upload, ShoppingBag, Flame } from "lucide-react";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/checkout")({
-  head: () => ({ meta: [{ title: "Checkout — Juragan Geprek" }] }),
+  head: () => ({
+    meta: [
+      { title: "Checkout — Juragan Geprek" },
+      { name: "description", content: "Selesaikan pesanan catering ayam geprekmu. Pilih jadwal pengiriman, alamat, dan metode pembayaran transfer bank." },
+      { property: "og:title", content: "Checkout Pesanan — Juragan Geprek" },
+      { property: "og:description", content: "Selesaikan pemesanan catering ayam geprek dengan jadwal pengiriman fleksibel." },
+      { property: "og:url", content: "https://geprek-feast-hub.lovable.app/checkout" },
+      { property: "og:type", content: "website" },
+    ],
+    links: [
+      { rel: "canonical", href: "https://geprek-feast-hub.lovable.app/checkout" },
+    ],
+  }),
   component: CheckoutPage,
 });
 
@@ -144,7 +156,7 @@ function CheckoutPage() {
               <div className="flex items-start justify-between gap-3">
                 <div className="flex-1">
                   <div className="flex flex-wrap items-center gap-2">
-                    <h3 className="font-semibold">{item.name}</h3>
+                    <h2 className="font-semibold text-base">{item.name}</h2>
                     <Badge variant="secondary" className="capitalize">{item.category}</Badge>
                     {item.category !== "minuman" && (
                       <Badge variant="outline" className="border-spice/50 text-spice"><Flame className="mr-1 h-3 w-3" />{spiceLabel[item.spiceLevel]}</Badge>

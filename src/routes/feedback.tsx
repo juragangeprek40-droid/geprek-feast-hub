@@ -15,7 +15,14 @@ export const Route = createFileRoute("/feedback")({
   head: () => ({
     meta: [
       { title: "Kritik & Saran — Juragan Geprek" },
-      { name: "description", content: "Kirim kritik, saran, dan masukan untuk membantu kami melayani lebih baik." },
+      { name: "description", content: "Kirim kritik, saran, dan masukan untuk membantu Juragan Geprek melayani lebih baik lagi." },
+      { property: "og:title", content: "Kritik & Saran — Juragan Geprek" },
+      { property: "og:description", content: "Bantu kami melayani lebih baik dengan masukan dan rating kamu." },
+      { property: "og:url", content: "https://geprek-feast-hub.lovable.app/feedback" },
+      { property: "og:type", content: "website" },
+    ],
+    links: [
+      { rel: "canonical", href: "https://geprek-feast-hub.lovable.app/feedback" },
     ],
   }),
   component: FeedbackPage,

@@ -11,7 +11,19 @@ import { toast } from "sonner";
 import { Flame } from "lucide-react";
 
 export const Route = createFileRoute("/auth")({
-  head: () => ({ meta: [{ title: "Masuk / Daftar — Juragan Geprek" }] }),
+  head: () => ({
+    meta: [
+      { title: "Masuk / Daftar — Juragan Geprek" },
+      { name: "description", content: "Masuk atau daftar akun Juragan Geprek untuk memesan catering ayam geprek dan memantau status pesananmu." },
+      { property: "og:title", content: "Masuk / Daftar — Juragan Geprek" },
+      { property: "og:description", content: "Buat akun atau login untuk memesan catering dan memantau pesananmu." },
+      { property: "og:url", content: "https://geprek-feast-hub.lovable.app/auth" },
+      { property: "og:type", content: "website" },
+    ],
+    links: [
+      { rel: "canonical", href: "https://geprek-feast-hub.lovable.app/auth" },
+    ],
+  }),
   component: AuthPage,
 });
 
@@ -61,6 +73,9 @@ function AuthPage() {
         </div>
         <div className="font-display text-xl font-bold">Juragan Geprek</div>
       </Link>
+
+      <h1 className="mb-2 text-center font-display text-2xl font-bold md:text-3xl">Masuk atau Daftar Akun</h1>
+      <p className="mb-6 text-center text-sm text-muted-foreground">Akses pesananmu dan pesan catering lebih cepat.</p>
 
       <Card className="w-full p-6 shadow-warm border-primary/20">
         <Tabs defaultValue="login">
