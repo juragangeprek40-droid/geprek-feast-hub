@@ -41,6 +41,7 @@ import { logActivity } from "@/lib/activity-log";
 import { validateImageFile, MAX_IMAGE_SIZE_MB, ALLOWED_IMAGE_EXTENSIONS } from "@/lib/file-validation";
 import { isPromoActive } from "@/lib/promo";
 import { toast } from "sonner";
+import { MidtransDiagnoseTab } from "@/components/MidtransDiagnoseTab";
 import {
   ShieldAlert,
   Users,
@@ -151,6 +152,9 @@ function SuperAdminPage() {
           <TabsTrigger value="feedback" className="gap-2">
             <MessageSquareHeart className="h-4 w-4" /> <span className="hidden sm:inline">Kritik & Saran</span><span className="sm:hidden">Saran</span>
           </TabsTrigger>
+          <TabsTrigger value="diagnose" className="gap-2">
+            <Star className="h-4 w-4" /> <span className="hidden sm:inline">Diagnosis Midtrans</span><span className="sm:hidden">Midtrans</span>
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="users" className="mt-6">
@@ -167,6 +171,9 @@ function SuperAdminPage() {
         </TabsContent>
         <TabsContent value="feedback" className="mt-6">
           <FeedbackTab />
+        </TabsContent>
+        <TabsContent value="diagnose" className="mt-6">
+          <MidtransDiagnoseTab />
         </TabsContent>
       </Tabs>
     </div>
