@@ -6,7 +6,7 @@ const MIDTRANS_SNAP_URL = "https://app.sandbox.midtrans.com/snap/v1/transactions
 export const createMidtransPayment = createServerFn({ method: "POST" })
   .inputValidator((d) => z.object({ orderId: z.string().uuid(), origin: z.string().url() }).parse(d))
   .handler(async ({ data }) => {
-    const serverKey = process.env["MIDTRANS_SERVER_KEY"];
+    const serverKey = process.env["MIDTRANS_SERVER_KEY"]?.trim();
     if (!serverKey) return { error: "Midtrans belum dikonfigurasi" as const, redirectUrl: null };
 
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
@@ -38,7 +38,8 @@ export const createMidtransPayment = createServerFn({ method: "POST" })
       callbacks: { finish: `${data.origin}/?paid=${order.order_number}` },
     };
 
-    const res = await fetch(MIDTRANS_SNAP_URL, {
+    const snapUrl = serverKey.startsWith("SB-") ? MIDTRANS_SNAP_URL : "https://app.midtrans.com/snap/v1/transactions";
+    const res = await fetch(snapUrl, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
