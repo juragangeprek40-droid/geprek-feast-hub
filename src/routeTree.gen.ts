@@ -19,6 +19,7 @@ import { Route as CheckoutRouteImport } from './routes/checkout'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as ApiMidtransDiagnoseRouteImport } from './routes/api/midtrans-diagnose'
 import { Route as ApiPublicMidtransWebhookRouteImport } from './routes/api/public/midtrans-webhook'
 
 const SuperAdminRoute = SuperAdminRouteImport.update({
@@ -71,6 +72,11 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiMidtransDiagnoseRoute = ApiMidtransDiagnoseRouteImport.update({
+  id: '/api/midtrans-diagnose',
+  path: '/api/midtrans-diagnose',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicMidtransWebhookRoute =
   ApiPublicMidtransWebhookRouteImport.update({
     id: '/api/public/midtrans-webhook',
@@ -89,6 +95,7 @@ export interface FileRoutesByFullPath {
   '/orders': typeof OrdersRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/super-admin': typeof SuperAdminRoute
+  '/api/midtrans-diagnose': typeof ApiMidtransDiagnoseRoute
   '/api/public/midtrans-webhook': typeof ApiPublicMidtransWebhookRoute
 }
 export interface FileRoutesByTo {
@@ -102,6 +109,7 @@ export interface FileRoutesByTo {
   '/orders': typeof OrdersRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/super-admin': typeof SuperAdminRoute
+  '/api/midtrans-diagnose': typeof ApiMidtransDiagnoseRoute
   '/api/public/midtrans-webhook': typeof ApiPublicMidtransWebhookRoute
 }
 export interface FileRoutesById {
@@ -116,6 +124,7 @@ export interface FileRoutesById {
   '/orders': typeof OrdersRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/super-admin': typeof SuperAdminRoute
+  '/api/midtrans-diagnose': typeof ApiMidtransDiagnoseRoute
   '/api/public/midtrans-webhook': typeof ApiPublicMidtransWebhookRoute
 }
 export interface FileRouteTypes {
@@ -131,6 +140,7 @@ export interface FileRouteTypes {
     | '/orders'
     | '/sitemap.xml'
     | '/super-admin'
+    | '/api/midtrans-diagnose'
     | '/api/public/midtrans-webhook'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -144,6 +154,7 @@ export interface FileRouteTypes {
     | '/orders'
     | '/sitemap.xml'
     | '/super-admin'
+    | '/api/midtrans-diagnose'
     | '/api/public/midtrans-webhook'
   id:
     | '__root__'
@@ -157,6 +168,7 @@ export interface FileRouteTypes {
     | '/orders'
     | '/sitemap.xml'
     | '/super-admin'
+    | '/api/midtrans-diagnose'
     | '/api/public/midtrans-webhook'
   fileRoutesById: FileRoutesById
 }
@@ -171,6 +183,7 @@ export interface RootRouteChildren {
   OrdersRoute: typeof OrdersRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   SuperAdminRoute: typeof SuperAdminRoute
+  ApiMidtransDiagnoseRoute: typeof ApiMidtransDiagnoseRoute
   ApiPublicMidtransWebhookRoute: typeof ApiPublicMidtransWebhookRoute
 }
 
@@ -246,6 +259,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/midtrans-diagnose': {
+      id: '/api/midtrans-diagnose'
+      path: '/api/midtrans-diagnose'
+      fullPath: '/api/midtrans-diagnose'
+      preLoaderRoute: typeof ApiMidtransDiagnoseRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/midtrans-webhook': {
       id: '/api/public/midtrans-webhook'
       path: '/api/public/midtrans-webhook'
@@ -267,6 +287,7 @@ const rootRouteChildren: RootRouteChildren = {
   OrdersRoute: OrdersRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   SuperAdminRoute: SuperAdminRoute,
+  ApiMidtransDiagnoseRoute: ApiMidtransDiagnoseRoute,
   ApiPublicMidtransWebhookRoute: ApiPublicMidtransWebhookRoute,
 }
 export const routeTree = rootRouteImport
