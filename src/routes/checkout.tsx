@@ -85,10 +85,12 @@ function CheckoutPage() {
 
     setSubmitting(true);
     try {
-      // 1. Insert order
-      const { data: order, error: orderErr } = await supabase
+      // 1. Insert order (id generated client-side so guests don't need SELECT access)
+      const order = { id: crypto.randomUUID() };
+      const { error: orderErr } = await supabase
         .from("orders")
         .insert({
+          id: order.id,
           customer_id: user?.id ?? null,
           guest_name: parsed.data.guest_name,
           guest_phone: parsed.data.guest_phone,
@@ -100,11 +102,9 @@ function CheckoutPage() {
           subtotal: total,
           total: total,
           status: "pending",
-        })
-        .select()
-        .single();
+        });
 
-      if (orderErr || !order) throw orderErr ?? new Error("Gagal buat pesanan");
+      if (orderErr) throw orderErr;
 
       // 2. Insert items
       const items = cart.map((c) => ({
@@ -124,7 +124,7 @@ function CheckoutPage() {
       const res = await payFn({ data: { orderId: order.id, origin: window.location.origin } });
       if (res.error || !res.redirectUrl) throw new Error(res.error ?? "Gagal membuat pembayaran");
       cartStore.clear();
-      toast.success(`Pesanan ${order.order_number} dibuat, mengarahkan ke pembayaran...`);
+      toast.success("Pesanan dibuat, mengarahkan ke pembayaran...");
       window.location.href = res.redirectUrl;
     } catch (e: any) {
       toast.error(e?.message ?? "Gagal memproses pesanan");
