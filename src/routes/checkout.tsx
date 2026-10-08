@@ -1,9 +1,10 @@
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { z } from "zod";
+import { useServerFn } from "@tanstack/react-start";
 import { useCart, cartStore, cartTotal, formatRupiah } from "@/lib/cart-store";
 import { useAuth } from "@/lib/auth";
-import { useSiteSettings } from "@/lib/site-settings";
+import { createMidtransPayment } from "@/lib/midtrans.functions";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -11,7 +12,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
-import { Trash2, Upload, ShoppingBag, Flame } from "lucide-react";
+import { Trash2, ShoppingBag, Flame, CreditCard } from "lucide-react";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/checkout")({
@@ -47,10 +48,8 @@ const orderSchema = z.object({
 function CheckoutPage() {
   const cart = useCart();
   const { user } = useAuth();
-  const { settings } = useSiteSettings();
-  const navigate = useNavigate();
+  const payFn = useServerFn(createMidtransPayment);
   const [submitting, setSubmitting] = useState(false);
-  const [proofFile, setProofFile] = useState<File | null>(null);
 
   const [form, setForm] = useState({
     guest_name: "",
@@ -81,10 +80,6 @@ function CheckoutPage() {
     const parsed = orderSchema.safeParse(form);
     if (!parsed.success) {
       toast.error(parsed.error.errors[0].message);
-      return;
-    }
-    if (!proofFile) {
-      toast.error("Silakan upload bukti transfer");
       return;
     }
 
@@ -125,19 +120,12 @@ function CheckoutPage() {
       const { error: itemsErr } = await supabase.from("order_items").insert(items);
       if (itemsErr) throw itemsErr;
 
-      // 3. Upload proof
-      const ext = proofFile.name.split(".").pop();
-      const path = `${order.id}/bukti-${Date.now()}.${ext}`;
-      const { error: upErr } = await supabase.storage.from("payment-proofs").upload(path, proofFile);
-      if (upErr) throw upErr;
-      const { data: pub } = supabase.storage.from("payment-proofs").getPublicUrl(path);
-
-      // 4. Update order with proof
-      await supabase.from("orders").update({ payment_proof_url: pub.publicUrl, status: "dibayar" }).eq("id", order.id);
-
+      // 3. Create Midtrans payment & redirect
+      const res = await payFn({ data: { orderId: order.id, origin: window.location.origin } });
+      if (res.error || !res.redirectUrl) throw new Error(res.error ?? "Gagal membuat pembayaran");
       cartStore.clear();
-      toast.success(`Pesanan ${order.order_number} berhasil dibuat!`);
-      navigate({ to: user ? "/orders" : "/" });
+      toast.success(`Pesanan ${order.order_number} dibuat, mengarahkan ke pembayaran...`);
+      window.location.href = res.redirectUrl;
     } catch (e: any) {
       toast.error(e?.message ?? "Gagal memproses pesanan");
     } finally {
@@ -204,16 +192,8 @@ function CheckoutPage() {
           </div>
 
           <div className="mt-5 rounded-lg bg-secondary p-3 text-xs">
-            <div className="font-semibold mb-1">Transfer ke:</div>
-            <div>{settings.payment.bank_name} <span className="font-mono">{settings.payment.account_number}</span></div>
-            <div>a.n. {settings.payment.account_holder}</div>
-            {settings.payment.instructions && <div className="mt-2 text-muted-foreground">{settings.payment.instructions}</div>}
-          </div>
-
-          <div className="mt-4">
-            <Label className="flex items-center gap-1"><Upload className="h-3.5 w-3.5" />Bukti Transfer *</Label>
-            <Input type="file" accept="image/*,application/pdf" onChange={(e) => setProofFile(e.target.files?.[0] ?? null)} />
-            {proofFile && <p className="mt-1 text-xs text-muted-foreground truncate">{proofFile.name}</p>}
+            <div className="font-semibold mb-1 flex items-center gap-1"><CreditCard className="h-3.5 w-3.5" />Pembayaran via Midtrans</div>
+            <div className="text-muted-foreground">QRIS, GoPay, ShopeePay, Virtual Account, atau kartu kredit. Status pesanan terverifikasi otomatis.</div>
           </div>
 
           <Button onClick={handleSubmit} disabled={submitting} size="lg" className="mt-5 w-full bg-gradient-warm text-primary-foreground shadow-warm">

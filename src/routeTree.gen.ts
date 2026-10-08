@@ -19,6 +19,7 @@ import { Route as CheckoutRouteImport } from './routes/checkout'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as ApiPublicMidtransWebhookRouteImport } from './routes/api/public/midtrans-webhook'
 
 const SuperAdminRoute = SuperAdminRouteImport.update({
   id: '/super-admin',
@@ -70,6 +71,12 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicMidtransWebhookRoute =
+  ApiPublicMidtransWebhookRouteImport.update({
+    id: '/api/public/midtrans-webhook',
+    path: '/api/public/midtrans-webhook',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -82,6 +89,7 @@ export interface FileRoutesByFullPath {
   '/orders': typeof OrdersRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/super-admin': typeof SuperAdminRoute
+  '/api/public/midtrans-webhook': typeof ApiPublicMidtransWebhookRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -94,6 +102,7 @@ export interface FileRoutesByTo {
   '/orders': typeof OrdersRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/super-admin': typeof SuperAdminRoute
+  '/api/public/midtrans-webhook': typeof ApiPublicMidtransWebhookRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -107,6 +116,7 @@ export interface FileRoutesById {
   '/orders': typeof OrdersRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/super-admin': typeof SuperAdminRoute
+  '/api/public/midtrans-webhook': typeof ApiPublicMidtransWebhookRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -121,6 +131,7 @@ export interface FileRouteTypes {
     | '/orders'
     | '/sitemap.xml'
     | '/super-admin'
+    | '/api/public/midtrans-webhook'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -133,6 +144,7 @@ export interface FileRouteTypes {
     | '/orders'
     | '/sitemap.xml'
     | '/super-admin'
+    | '/api/public/midtrans-webhook'
   id:
     | '__root__'
     | '/'
@@ -145,6 +157,7 @@ export interface FileRouteTypes {
     | '/orders'
     | '/sitemap.xml'
     | '/super-admin'
+    | '/api/public/midtrans-webhook'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -158,6 +171,7 @@ export interface RootRouteChildren {
   OrdersRoute: typeof OrdersRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   SuperAdminRoute: typeof SuperAdminRoute
+  ApiPublicMidtransWebhookRoute: typeof ApiPublicMidtransWebhookRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -232,6 +246,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/midtrans-webhook': {
+      id: '/api/public/midtrans-webhook'
+      path: '/api/public/midtrans-webhook'
+      fullPath: '/api/public/midtrans-webhook'
+      preLoaderRoute: typeof ApiPublicMidtransWebhookRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -246,6 +267,7 @@ const rootRouteChildren: RootRouteChildren = {
   OrdersRoute: OrdersRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   SuperAdminRoute: SuperAdminRoute,
+  ApiPublicMidtransWebhookRoute: ApiPublicMidtransWebhookRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
