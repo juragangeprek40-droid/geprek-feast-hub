@@ -124,7 +124,7 @@ function CheckoutPage() {
       const res = await payFn({ data: { orderId: order.id, origin: window.location.origin } });
       if (res.error || !res.redirectUrl) throw new Error(res.error ?? "Gagal membuat pembayaran");
       cartStore.clear();
-      toast.success(`Pesanan ${order.order_number} dibuat, mengarahkan ke pembayaran...`);
+      toast.success("Pesanan dibuat, mengarahkan ke pembayaran...");
       window.location.href = res.redirectUrl;
     } catch (e: any) {
       toast.error(e?.message ?? "Gagal memproses pesanan");
