@@ -38,8 +38,7 @@ export const createMidtransPayment = createServerFn({ method: "POST" })
       callbacks: { finish: `${data.origin}/?paid=${order.order_number}` },
     };
 
-    const snapUrl = serverKey.startsWith("SB-") ? MIDTRANS_SNAP_URL : "https://app.midtrans.com/snap/v1/transactions";
-    const res = await fetch(snapUrl, {
+    const doFetch = (url: string) => fetch(url, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -48,6 +47,9 @@ export const createMidtransPayment = createServerFn({ method: "POST" })
       },
       body: JSON.stringify(body),
     });
+    // Try sandbox first, fall back to production if key is not a sandbox key
+    let res = await doFetch(MIDTRANS_SNAP_URL);
+    if (res.status === 401) res = await doFetch("https://app.midtrans.com/snap/v1/transactions");
     const json: any = await res.json().catch(() => ({}));
     if (!res.ok || !json.redirect_url) {
       console.error("Midtrans error", res.status, json);
