@@ -25,7 +25,7 @@ export const createMidtransPayment = createServerFn({ method: "POST" })
 
     const body = {
       transaction_details: {
-        order_id: `${order.id}__${Date.now()}`,
+        order_id: `${order.id}__${Date.now().toString(36)}`,
         gross_amount: Math.round(Number(order.total)),
       },
       item_details: (items ?? []).map((i) => ({
