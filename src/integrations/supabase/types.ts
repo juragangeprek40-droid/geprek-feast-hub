@@ -184,6 +184,7 @@ export type Database = {
       }
       orders: {
         Row: {
+          cancel_reason: string | null
           courier_id: string | null
           created_at: string
           customer_id: string | null
@@ -203,6 +204,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          cancel_reason?: string | null
           courier_id?: string | null
           created_at?: string
           customer_id?: string | null
@@ -222,6 +224,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          cancel_reason?: string | null
           courier_id?: string | null
           created_at?: string
           customer_id?: string | null
