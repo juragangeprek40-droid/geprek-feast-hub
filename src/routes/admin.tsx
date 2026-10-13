@@ -30,8 +30,9 @@ interface OrderFull {
   payment_proof_url: string | null;
   notes: string | null;
   courier_id: string | null;
+  cancel_reason: string | null;
   created_at: string;
-  order_items: { menu_name: string; quantity: number; spice_level: string; extras: string | null; subtotal: number }[];
+  order_items: { menu_name: string; quantity: number; spice_level: string; extras: string | null; subtotal: number; menus: { category: string } | null }[];
 }
 
 interface Courier { id: string; full_name: string | null; }
@@ -50,7 +51,7 @@ function AdminPage() {
   async function load() {
     const { data } = await supabase
       .from("orders")
-      .select("*, order_items(menu_name, quantity, spice_level, extras, subtotal)")
+      .select("*, order_items(menu_name, quantity, spice_level, extras, subtotal, menus(category))")
       .order("created_at", { ascending: false });
     setOrders((data ?? []) as OrderFull[]);
 
@@ -68,7 +69,14 @@ function AdminPage() {
   }, [isAdmin]);
 
   async function updateStatus(id: string, status: string) {
-    const { error } = await supabase.from("orders").update({ status: status as any }).eq("id", id);
+    let cancel_reason: string | null = null;
+    if (status === "dibatalkan") {
+      const r = window.prompt("Alasan pembatalan pesanan:");
+      if (r === null) return;
+      if (!r.trim()) return toast.error("Alasan pembatalan wajib diisi");
+      cancel_reason = r.trim().slice(0, 500);
+    }
+    const { error } = await supabase.from("orders").update({ status: status as any, cancel_reason }).eq("id", id);
     if (error) return toast.error(error.message);
     toast.success("Status diperbarui");
     load();
@@ -153,15 +161,24 @@ function OrderCard({ order: o, couriers, onStatus, onAssign }: { order: OrderFul
             <div className="text-muted-foreground"><CalendarDays className="inline mr-1 h-3.5 w-3.5" />{new Date(o.delivery_date).toLocaleDateString("id-ID", { dateStyle: "long" })} {o.delivery_time}</div>
             <div className="text-muted-foreground md:col-span-2"><MapPin className="inline mr-1 h-3.5 w-3.5" />{o.delivery_address}</div>
             {o.notes && <div className="md:col-span-2 italic text-xs">"{o.notes}"</div>}
+            {o.status === "dibatalkan" && o.cancel_reason && (
+              <div className="md:col-span-2 rounded-md border border-destructive/40 bg-destructive/10 px-2 py-1 text-xs text-destructive">
+                Alasan pembatalan: {o.cancel_reason}
+              </div>
+            )}
           </div>
 
           <div className="mt-3 rounded-lg bg-secondary/50 p-3 text-sm">
-            {o.order_items.map((it, i) => (
+            {o.order_items.map((it, i) => {
+              const isDrink = it.menus?.category === "minuman";
+              const detail = [isDrink ? null : it.spice_level.replace("_", " "), it.extras].filter(Boolean).join(", ");
+              return (
               <div key={i} className="flex justify-between gap-2">
-                <span>{it.menu_name} <span className="text-xs text-muted-foreground">({it.spice_level}{it.extras ? `, ${it.extras}` : ""})</span></span>
+                <span>{it.menu_name} {detail && <span className="text-xs text-muted-foreground">({detail})</span>}</span>
                 <span>×{it.quantity} — {formatRupiah(it.subtotal)}</span>
               </div>
-            ))}
+              );
+            })}
           </div>
         </div>
 

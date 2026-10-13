@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { z } from "zod";
 import { useServerFn } from "@tanstack/react-start";
 import { useCart, cartStore, cartTotal, formatRupiah } from "@/lib/cart-store";
@@ -12,7 +12,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
-import { Trash2, ShoppingBag, Flame, CreditCard } from "lucide-react";
+import { Trash2, ShoppingBag, Flame, CreditCard, LocateFixed } from "lucide-react";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/checkout")({
@@ -59,6 +59,44 @@ function CheckoutPage() {
     delivery_time: "",
     notes: "",
   });
+
+  const [locating, setLocating] = useState(false);
+
+  // Auto-fill from the logged-in customer's profile
+  useEffect(() => {
+    if (!user) return;
+    supabase.from("profiles").select("full_name, phone, address").eq("id", user.id).maybeSingle().then(({ data }) => {
+      if (!data) return;
+      setForm((f) => ({
+        ...f,
+        guest_name: f.guest_name || data.full_name || "",
+        guest_phone: f.guest_phone || data.phone || "",
+        delivery_address: f.delivery_address || data.address || "",
+      }));
+    });
+  }, [user]);
+
+  function useMyLocation() {
+    if (!navigator.geolocation) return toast.error("Browser tidak mendukung lokasi");
+    setLocating(true);
+    navigator.geolocation.getCurrentPosition(
+      async ({ coords }) => {
+        try {
+          const r = await fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${coords.latitude}&lon=${coords.longitude}&accept-language=id`);
+          const j = await r.json();
+          const addr = j.display_name || `${coords.latitude}, ${coords.longitude}`;
+          setForm((f) => ({ ...f, delivery_address: addr }));
+          toast.success("Alamat terisi otomatis, tambahkan patokan bila perlu");
+        } catch {
+          toast.error("Gagal mengambil alamat");
+        } finally {
+          setLocating(false);
+        }
+      },
+      () => { setLocating(false); toast.error("Izin lokasi ditolak"); },
+      { enableHighAccuracy: true, timeout: 15000 },
+    );
+  }
 
   const total = cartTotal(cart);
   const today = new Date().toISOString().split("T")[0];
@@ -173,7 +211,15 @@ function CheckoutPage() {
             <div><Label>No. HP / WhatsApp *</Label><Input value={form.guest_phone} onChange={(e) => setForm({ ...form, guest_phone: e.target.value })} placeholder="0812..." /></div>
             <div><Label>Tanggal Acara *</Label><Input type="date" min={today} value={form.delivery_date} onChange={(e) => setForm({ ...form, delivery_date: e.target.value })} /></div>
             <div><Label>Jam Pengiriman</Label><Input type="time" value={form.delivery_time} onChange={(e) => setForm({ ...form, delivery_time: e.target.value })} /></div>
-            <div className="md:col-span-2"><Label>Alamat Pengiriman *</Label><Textarea value={form.delivery_address} onChange={(e) => setForm({ ...form, delivery_address: e.target.value })} placeholder="Alamat lengkap dengan patokan" /></div>
+            <div className="md:col-span-2">
+              <div className="flex items-center justify-between gap-2">
+                <Label>Alamat Pengiriman *</Label>
+                <Button type="button" variant="outline" size="sm" onClick={useMyLocation} disabled={locating} className="h-7 gap-1 text-xs">
+                  <LocateFixed className="h-3.5 w-3.5" />{locating ? "Mencari lokasi..." : "Gunakan lokasi saya"}
+                </Button>
+              </div>
+              <Textarea className="mt-1" value={form.delivery_address} onChange={(e) => setForm({ ...form, delivery_address: e.target.value })} placeholder="Alamat lengkap dengan patokan" />
+            </div>
             <div className="md:col-span-2"><Label>Catatan untuk Juragan</Label><Textarea value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} placeholder="Catatan tambahan (opsional)" /></div>
           </div>
         </Card>

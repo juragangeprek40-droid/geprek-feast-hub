@@ -41,6 +41,7 @@ interface OrderRow {
   delivery_address: string;
   total: number;
   status: string;
+  cancel_reason: string | null;
   created_at: string;
   order_type: string;
   order_items: { menu_name: string; quantity: number }[];
@@ -60,7 +61,7 @@ function OrdersPage() {
     if (!user) return;
     supabase
       .from("orders")
-      .select("id, order_number, delivery_date, delivery_address, total, status, created_at, order_type, order_items(menu_name, quantity)")
+      .select("id, order_number, delivery_date, delivery_address, total, status, cancel_reason, created_at, order_type, order_items(menu_name, quantity)")
       .eq("customer_id", user.id)
       .order("created_at", { ascending: false })
       .then(({ data }) => {
@@ -99,6 +100,9 @@ function OrdersPage() {
                     <span className="inline-flex items-center gap-1"><CalendarDays className="h-3.5 w-3.5" />{new Date(o.delivery_date).toLocaleDateString("id-ID", { dateStyle: "long" })}</span>
                     <span className="inline-flex items-center gap-1"><MapPin className="h-3.5 w-3.5" />{o.delivery_address.slice(0, 40)}...</span>
                   </div>
+                  {o.status === "dibatalkan" && o.cancel_reason && (
+                    <p className="mt-2 text-xs text-destructive">Alasan pembatalan: {o.cancel_reason}</p>
+                  )}
                 </div>
                 <div className="text-right">
                   <div className="font-display text-xl font-bold text-primary">{formatRupiah(o.total)}</div>
