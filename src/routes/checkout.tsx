@@ -186,6 +186,19 @@ function CheckoutPage() {
       // 3. Create Midtrans payment & redirect
       const res = await payFn({ data: { orderId: order.id, origin: window.location.origin } });
       if (res.error || !res.redirectUrl) throw new Error(res.error ?? "Gagal membuat pembayaran");
+      // 4. Remember these details for next time and keep the account up to date
+      saveDeliveryInfo({
+        name: parsed.data.guest_name,
+        phone: parsed.data.guest_phone,
+        address: parsed.data.delivery_address,
+      });
+      if (user) {
+        supabase
+          .from("profiles")
+          .update({ full_name: parsed.data.guest_name, phone: parsed.data.guest_phone })
+          .eq("id", user.id)
+          .then(() => {});
+      }
       cartStore.clear();
       toast.success("Pesanan dibuat, mengarahkan ke pembayaran...");
       window.location.href = res.redirectUrl;
@@ -232,8 +245,8 @@ function CheckoutPage() {
         <Card className="p-5 shadow-soft">
           <h2 className="font-display text-lg font-bold mb-4">Detail Pengiriman</h2>
           <div className="grid gap-4 md:grid-cols-2">
-            <div><Label>Nama Pemesan *</Label><Input value={form.guest_name} onChange={(e) => setForm({ ...form, guest_name: e.target.value })} placeholder="Nama lengkap" /></div>
-            <div><Label>No. HP / WhatsApp *</Label><Input value={form.guest_phone} onChange={(e) => setForm({ ...form, guest_phone: e.target.value })} placeholder="0812..." /></div>
+            <div><Label>Nama Pemesan *</Label><Input value={form.guest_name} onChange={(e) => setForm({ ...form, guest_name: e.target.value })} placeholder="Nama lengkap" autoComplete="name" /></div>
+            <div><Label>No. HP / WhatsApp *</Label><Input value={form.guest_phone} onChange={(e) => setForm({ ...form, guest_phone: e.target.value })} placeholder="0812..." autoComplete="tel" inputMode="tel" /></div>
             <div><Label>Tanggal Acara *</Label><Input type="date" min={today} value={form.delivery_date} onChange={(e) => setForm({ ...form, delivery_date: e.target.value })} /></div>
             <div><Label>Jam Pengiriman</Label><Input type="time" value={form.delivery_time} onChange={(e) => setForm({ ...form, delivery_time: e.target.value })} /></div>
             <div className="md:col-span-2">
@@ -243,7 +256,7 @@ function CheckoutPage() {
                   <LocateFixed className="h-3.5 w-3.5" />{locating ? "Mencari lokasi..." : "Gunakan lokasi saya"}
                 </Button>
               </div>
-              <Textarea className="mt-1" value={form.delivery_address} onChange={(e) => setForm({ ...form, delivery_address: e.target.value })} placeholder="Alamat lengkap dengan patokan" />
+              <Textarea className="mt-1" value={form.delivery_address} onChange={(e) => setForm({ ...form, delivery_address: e.target.value })} placeholder="Alamat lengkap dengan patokan" autoComplete="street-address" />
             </div>
             <div className="md:col-span-2"><Label>Catatan untuk Juragan</Label><Textarea value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} placeholder="Catatan tambahan (opsional)" /></div>
           </div>
