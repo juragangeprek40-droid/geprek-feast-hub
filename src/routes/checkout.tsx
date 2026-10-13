@@ -5,6 +5,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { useCart, cartStore, cartTotal, formatRupiah } from "@/lib/cart-store";
 import { useAuth } from "@/lib/auth";
 import { createMidtransPayment } from "@/lib/midtrans.functions";
+import { loadDeliveryInfo, saveDeliveryInfo } from "@/lib/delivery-info";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -62,7 +63,19 @@ function CheckoutPage() {
 
   const [locating, setLocating] = useState(false);
 
-  // Auto-fill from the logged-in customer's profile
+  // 1. Fill name / WhatsApp / address from what this device used last time
+  useEffect(() => {
+    const saved = loadDeliveryInfo();
+    if (!saved.name && !saved.phone && !saved.address) return;
+    setForm((f) => ({
+      ...f,
+      guest_name: f.guest_name || saved.name,
+      guest_phone: f.guest_phone || saved.phone,
+      delivery_address: f.delivery_address || saved.address,
+    }));
+  }, []);
+
+  // 2. For logged-in customers, top up anything still empty from their account
   useEffect(() => {
     if (!user) return;
     supabase.from("profiles").select("full_name, phone, address").eq("id", user.id).maybeSingle().then(({ data }) => {
@@ -75,6 +88,18 @@ function CheckoutPage() {
       }));
     });
   }, [user]);
+
+  // 3. Keep the remembered details in sync while the customer types
+  useEffect(() => {
+    const t = setTimeout(() => {
+      saveDeliveryInfo({
+        name: form.guest_name,
+        phone: form.guest_phone,
+        address: form.delivery_address,
+      });
+    }, 400);
+    return () => clearTimeout(t);
+  }, [form.guest_name, form.guest_phone, form.delivery_address]);
 
   function useMyLocation() {
     if (!navigator.geolocation) return toast.error("Browser tidak mendukung lokasi");
