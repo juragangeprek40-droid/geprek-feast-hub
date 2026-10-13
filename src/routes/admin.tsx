@@ -177,7 +177,8 @@ function OrderCard({ order: o, couriers, onStatus, onAssign }: { order: OrderFul
                 <span>{it.menu_name} {detail && <span className="text-xs text-muted-foreground">({detail})</span>}</span>
                 <span>×{it.quantity} — {formatRupiah(it.subtotal)}</span>
               </div>
-            ))}
+              );
+            })}
           </div>
         </div>
 
